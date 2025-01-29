@@ -7,6 +7,9 @@ This Chrome extension blocks YouTube Shorts videos and displays a random quote f
 - Displays a random quote from [Quotable API](https://quotable.io).
 - Customizable UI to display the quote nicely.
 
+<img src="image.png" alt="YouTube Shorts Blocker Preview" width="600" height="auto">
+
+
 ## How to Install
 
 ### 1. Clone the Repository
