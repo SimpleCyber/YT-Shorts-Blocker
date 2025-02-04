@@ -1,18 +1,24 @@
 {
-    "manifest_version": 3,
-    "name": "YouTube Shorts Blocker",
-    "icons": {
-      "48": "icon.png"
-    },
-    "version": "1.0",
-    "description": "Blocks YouTube Shorts and shows inspiring quotes instead",
-    "permissions": ["webNavigation", "scripting"],
-    "host_permissions": ["*://www.youtube.com/*"],
-    "content_scripts": [
-      {
-        "matches": ["*://www.youtube.com/*"],
-        "js": ["content.js"],
-        "css": ["styles.css"]
-      }
-    ]
-  }
+  "manifest_version": 3,
+  "name": "Shorts & Reels Blocker",
+  "version": "1.1",
+  "description": "Blocks YouTube Shorts and Instagram Reels, showing inspiring quotes instead.",
+  "icons": {
+    "48": "icon.png"
+  },
+  "permissions": ["scripting"],
+  "host_permissions": [
+    "*://www.youtube.com/*",
+    "*://www.instagram.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://www.youtube.com/*",
+        "*://www.instagram.com/*"
+      ],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ]
+}
