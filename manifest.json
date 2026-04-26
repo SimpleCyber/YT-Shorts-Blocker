@@ -24,7 +24,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["privacy.html", "privacy.css"],
+      "resources": ["index.html", "privacy.css"],
       "matches": ["<all_urls>"]
     }
   ]
