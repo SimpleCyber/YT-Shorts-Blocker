@@ -182,6 +182,26 @@ function createSandglassTimer() {
       line-height: 1.5;
     }
 
+    .privacy-link-wrap {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .privacy-link {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 12px;
+      opacity: 0.5;
+      transition: all 0.2s;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .privacy-link:hover {
+      opacity: 1;
+      color: var(--primary);
+    }
+
     .hourglass-container {
       position: relative;
       width: 320px;
@@ -565,6 +585,9 @@ function createSandglassTimer() {
       <div class="tips-container">
         <div class="tip-heading">💡 FOCUS TIP</div>
         <div class="tip-content" id="focus-tip">Did you know? It takes average 23 minutes to regain full focus after a single distraction.</div>
+      </div>
+      <div class="privacy-link-wrap">
+        <a href="${chrome.runtime.getURL('privacy.html')}" target="_blank" class="privacy-link">Privacy Policy</a>
       </div>
     </div>
     <div class="timer-panel">
