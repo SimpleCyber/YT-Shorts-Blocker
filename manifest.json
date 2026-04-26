@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Shorts & Reels Blocker",
-  "version": "1.1",
-  "description": "Blocks YouTube Shorts and Instagram Reels, showing inspiring quotes instead.",
+  "name": "FocusShield: Content & Distraction Blocker",
+  "version": "1.2",
+  "description": "Reclaim your focus by blocking addictive short-form content. Transform distractions into moments of reflection with custom block lists and secure timed locks.",
   "icons": {
     "48": "icon.png"
   },

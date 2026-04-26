@@ -367,6 +367,15 @@ function createSandglassTimer() {
       font-weight: 500;
     }
 
+    .settings-error {
+      color: #ef4444;
+      font-size: 11px;
+      margin-top: 5px;
+      margin-left: 2px;
+      display: none;
+      animation: fadeIn 0.2s ease;
+    }
+
     .duration-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -409,13 +418,7 @@ function createSandglassTimer() {
     }
 
     .locked-trigger {
-      width: auto !important;
-      padding: 0 15px !important;
-      font-size: 12px;
-      font-weight: 700;
-      background: #ef4444 !important;
-      border-color: #ef4444 !important;
-      position: relative;
+      cursor: default; /* Keep default cursor since it's not clickable */
     }
 
     .locked-trigger .tooltip {
@@ -554,7 +557,7 @@ function createSandglassTimer() {
 
   container.innerHTML = `
     <div class="info-panel">
-      <div class="app-title">Shorts Blocker</div>
+      <div class="app-title">FocusShield</div>
       <div class="quote-wrap">
         <div class="quote-text" id="quote-text">"Distraction is the thief of time."</div>
         <div class="quote-author" id="quote-author">Marcus Aurelius</div>
@@ -586,6 +589,7 @@ function createSandglassTimer() {
             <input type="text" class="settings-input" id="new-site-input" placeholder="e.g. facebook.com">
             <button class="settings-btn" id="add-site-btn">Add</button>
           </div>
+          <div class="settings-error" id="site-error">This site is already in your block list</div>
         </div>
 
         <div class="settings-section">
@@ -653,6 +657,7 @@ function createSandglassTimer() {
   const sitesListEl = container.querySelector("#blocked-sites-list");
   const addSiteBtn = container.querySelector("#add-site-btn");
   const newSiteInput = container.querySelector("#new-site-input");
+  const siteError = container.querySelector("#site-error");
   const durationOptions = container.querySelectorAll(".duration-option:not(.lock-opt)");
   const lockOptions = container.querySelectorAll(".lock-opt");
   const activateLockBtn = container.querySelector("#activate-lock-btn");
@@ -671,7 +676,7 @@ function createSandglassTimer() {
       let timeStr = days > 0 ? `${days}d ${hours}h left` : `${hours}h left`;
       
       settingsTrigger.classList.add("locked-trigger");
-      settingsTrigger.innerHTML = `LOCKED <div class="tooltip">${timeStr}</div>`;
+      settingsTrigger.innerHTML = `<i class="fas fa-lock"></i> <div class="tooltip">${timeStr}</div>`;
       settingsTrigger.onclick = null;
       settingsPanel.classList.remove("open");
     } else {
@@ -761,10 +766,17 @@ function createSandglassTimer() {
         const updated = [...current.blockedSites, newSite];
         chrome.storage.local.set({ blockedSites: updated }, () => {
           newSiteInput.value = "";
+          siteError.style.display = "none";
           renderSettings();
         });
+      } else {
+        siteError.style.display = "block";
       }
     }
+  };
+
+  newSiteInput.oninput = () => {
+    siteError.style.display = "none";
   };
 
   renderSettings();
