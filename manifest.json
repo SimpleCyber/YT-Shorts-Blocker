@@ -6,7 +6,7 @@
   "icons": {
     "48": "icon.png"
   },
-  "permissions": ["scripting"],
+  "permissions": ["scripting", "storage"],
   "host_permissions": [
     "*://www.youtube.com/*",
     "*://www.instagram.com/*"

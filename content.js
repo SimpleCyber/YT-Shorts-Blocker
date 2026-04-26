@@ -1,3 +1,60 @@
+const DEFAULTS = {
+  blockedSites: ["youtube.com/shorts", "instagram.com/reels"],
+  duration: 60, // seconds
+  lockUntil: 0 // timestamp
+};
+
+async function getSettings() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(DEFAULTS, (result) => {
+      resolve(result);
+    });
+  });
+}
+
+// Function to show custom confirm/alert
+function showCustomModal({ title, message, confirmText = "Confirm", cancelText = "Cancel", type = "confirm" }) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "custom-modal-overlay";
+    
+    overlay.innerHTML = `
+      <div class="custom-modal">
+        <div class="modal-title">${title}</div>
+        <div class="modal-message">${message}</div>
+        <div class="modal-buttons">
+          ${type === "confirm" ? `<button class="modal-btn btn-cancel" id="modal-cancel">${cancelText}</button>` : ""}
+          <button class="modal-btn ${type === "confirm" ? "btn-confirm" : "btn-primary"}" id="modal-confirm">${confirmText}</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const confirmBtn = overlay.querySelector("#modal-confirm");
+    const cancelBtn = overlay.querySelector("#modal-cancel");
+
+    confirmBtn.onclick = () => {
+      overlay.remove();
+      resolve(true);
+    };
+
+    if (cancelBtn) {
+      cancelBtn.onclick = () => {
+        overlay.remove();
+        resolve(false);
+      };
+    }
+
+    overlay.onclick = (e) => {
+      if (e.target === overlay) {
+        overlay.remove();
+        resolve(false);
+      }
+    };
+  });
+}
+
 // Function to create and inject the sandglass timer
 function createSandglassTimer() {
   // Add Google Fonts
@@ -190,6 +247,294 @@ function createSandglassTimer() {
         padding: 40px;
       }
     }
+
+    /* Settings Panel Styles */
+    .settings-panel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+    }
+
+    .settings-panel.open {
+      transform: translateX(0);
+    }
+
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .settings-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .close-settings {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-size: 20px;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .close-settings:hover {
+      color: #fff;
+    }
+
+    .settings-section {
+      margin-bottom: 30px;
+    }
+
+    .section-label {
+      font-size: 14px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 15px;
+      display: block;
+    }
+
+    .block-list {
+      max-height: 200px;
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 15px;
+    }
+
+    .block-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .block-item:last-child {
+      border-bottom: none;
+    }
+
+    .remove-site {
+      color: #ef4444;
+      cursor: pointer;
+      font-size: 14px;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+
+    .remove-site:hover {
+      opacity: 1;
+    }
+
+    .add-site-wrap {
+      display: flex;
+      gap: 10px;
+    }
+
+    .settings-input {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 10px 15px;
+      color: #fff;
+      font-family: inherit;
+    }
+
+    .settings-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0 15px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .duration-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .duration-option {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+
+    .duration-option.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .lock-btn {
+      width: 100%;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      padding: 12px;
+      border-radius: 12px;
+      margin-top: 15px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+
+    .lock-btn:hover {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .locked-trigger {
+      width: auto !important;
+      padding: 0 15px !important;
+      font-size: 12px;
+      font-weight: 700;
+      background: #ef4444 !important;
+      border-color: #ef4444 !important;
+      position: relative;
+    }
+
+    .locked-trigger .tooltip {
+      position: absolute;
+      bottom: -40px;
+      right: 0;
+      background: #1e293b;
+      padding: 8px 12px;
+      border-radius: 8px;
+      white-space: nowrap;
+      font-size: 11px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      border: 1px solid rgba(255,255,255,0.1);
+      z-index: 1000;
+    }
+
+    .locked-trigger:hover .tooltip {
+      opacity: 1;
+    }
+
+    /* Custom Alert/Confirm Styles */
+    .custom-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2147483647;
+      animation: modalFadeIn 0.2s ease-out;
+    }
+
+    .custom-modal {
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 30px;
+      width: 400px;
+      max-width: 90%;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      animation: modalSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes modalSlideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+
+    .modal-message {
+      font-size: 15px;
+      color: var(--text-dim);
+      line-height: 1.5;
+      margin-bottom: 25px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .modal-btn {
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      font-family: inherit;
+    }
+
+    .btn-cancel {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-dim);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-cancel:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .btn-confirm {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .btn-confirm:hover {
+      background: #dc2626;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #4f46e5;
+    }
   `;
   document.head.appendChild(styleEl);
 
@@ -220,9 +565,55 @@ function createSandglassTimer() {
       </div>
     </div>
     <div class="timer-panel">
-      <button class="theme-toggle" id="theme-toggler">
-        <i class="fas fa-moon"></i>
+      <button class="theme-toggle" id="settings-trigger">
+        <i class="fas fa-cog"></i>
       </button>
+
+      <div class="settings-panel" id="settings-panel">
+        <div class="settings-header">
+          <div class="settings-title">Settings</div>
+          <button class="close-settings" id="settings-close">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="settings-section">
+          <label class="section-label">Website Block List</label>
+          <div class="block-list" id="blocked-sites-list">
+            <!-- Sites will be injected here -->
+          </div>
+          <div class="add-site-wrap">
+            <input type="text" class="settings-input" id="new-site-input" placeholder="e.g. facebook.com">
+            <button class="settings-btn" id="add-site-btn">Add</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <label class="section-label">Block Duration</label>
+          <div class="duration-grid">
+            <div class="duration-option" data-value="60">1 Min</div>
+            <div class="duration-option" data-value="120">2 Min</div>
+            <div class="duration-option" data-value="300">5 Min</div>
+            <div class="duration-option" data-value="3600">1 Hour</div>
+            <div class="duration-option" data-value="7200">2 Hours</div>
+            <div class="duration-option" data-value="14400">4 Hours</div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <label class="section-label">Secure Lock</label>
+          <div class="duration-grid">
+            <div class="duration-option lock-opt" data-days="1">1 Day</div>
+            <div class="duration-option lock-opt" data-days="2">2 Days</div>
+            <div class="duration-option lock-opt" data-days="5">5 Days</div>
+            <div class="duration-option lock-opt" data-days="7">1 Week</div>
+            <div class="duration-option lock-opt" data-days="21">21 Days</div>
+            <div class="duration-option lock-opt" data-days="30">1 Month</div>
+          </div>
+          <button class="lock-btn" id="activate-lock-btn">LOCK SETTINGS</button>
+        </div>
+      </div>
+
       <div class="hourglass-container">
           <div class="outer-wrapper">
             <div class="wrapper">
@@ -255,36 +646,163 @@ function createSandglassTimer() {
   const focusTipEl = container.querySelector("#focus-tip");
   focusTipEl.textContent = tips[Math.floor(Math.random() * tips.length)];
 
+  // Settings UI Logic
+  const settingsPanel = container.querySelector("#settings-panel");
+  const settingsTrigger = container.querySelector("#settings-trigger");
+  const settingsClose = container.querySelector("#settings-close");
+  const sitesListEl = container.querySelector("#blocked-sites-list");
+  const addSiteBtn = container.querySelector("#add-site-btn");
+  const newSiteInput = container.querySelector("#new-site-input");
+  const durationOptions = container.querySelectorAll(".duration-option:not(.lock-opt)");
+  const lockOptions = container.querySelectorAll(".lock-opt");
+  const activateLockBtn = container.querySelector("#activate-lock-btn");
+
+  let selectedLockDays = 0;
+
+  async function updateLockUI() {
+    const settings = await getSettings();
+    const isLocked = Date.now() < settings.lockUntil;
+
+    if (isLocked) {
+      const timeLeft = settings.lockUntil - Date.now();
+      const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      
+      let timeStr = days > 0 ? `${days}d ${hours}h left` : `${hours}h left`;
+      
+      settingsTrigger.classList.add("locked-trigger");
+      settingsTrigger.innerHTML = `LOCKED <div class="tooltip">${timeStr}</div>`;
+      settingsTrigger.onclick = null;
+      settingsPanel.classList.remove("open");
+    } else {
+      settingsTrigger.classList.remove("locked-trigger");
+      settingsTrigger.innerHTML = `<i class="fas fa-cog"></i>`;
+      settingsTrigger.onclick = () => {
+        renderSettings();
+        settingsPanel.classList.add("open");
+      };
+    }
+  }
+
+  settingsClose.onclick = () => settingsPanel.classList.remove("open");
+
+  async function renderSettings() {
+    const settings = await getSettings();
+    
+    // Render sites
+    sitesListEl.innerHTML = settings.blockedSites.map(site => `
+      <div class="block-item">
+        <span>${site}</span>
+        <i class="fas fa-trash remove-site" data-site="${site}"></i>
+      </div>
+    `).join('');
+
+    // Add remove listeners
+    sitesListEl.querySelectorAll(".remove-site").forEach(btn => {
+      btn.onclick = async () => {
+        const siteToRemove = btn.dataset.site;
+        const current = await getSettings();
+        const updated = current.blockedSites.filter(s => s !== siteToRemove);
+        chrome.storage.local.set({ blockedSites: updated }, renderSettings);
+      };
+    });
+
+    // Render active duration
+    durationOptions.forEach(opt => {
+      opt.classList.toggle("active", parseInt(opt.dataset.value) === settings.duration);
+      opt.onclick = () => {
+        chrome.storage.local.set({ duration: parseInt(opt.dataset.value) }, renderSettings);
+      };
+    });
+
+    // Render lock selection
+    lockOptions.forEach(opt => {
+      opt.classList.toggle("active", parseInt(opt.dataset.days) === selectedLockDays);
+      opt.onclick = () => {
+        selectedLockDays = parseInt(opt.dataset.days);
+        renderSettings();
+      };
+    });
+  }
+
+  activateLockBtn.onclick = async () => {
+    if (selectedLockDays > 0) {
+      const confirmed = await showCustomModal({
+        title: "Are you sure?",
+        message: `You are about to lock your settings for ${selectedLockDays} days. This action cannot be undone and you won't be able to change any settings until the time is up.`,
+        confirmText: "Lock Now",
+        cancelText: "Go Back"
+      });
+
+      if (confirmed) {
+        const lockUntil = Date.now() + (selectedLockDays * 24 * 60 * 60 * 1000);
+        chrome.storage.local.set({ lockUntil }, () => {
+          updateLockUI();
+        });
+      }
+    } else {
+      showCustomModal({
+        title: "Selection Required",
+        message: "Please select a lock duration before clicking the lock button.",
+        confirmText: "Got it",
+        type: "alert"
+      });
+    }
+  };
+
+  addSiteBtn.onclick = async () => {
+    const newSite = newSiteInput.value.trim().toLowerCase();
+    if (newSite) {
+      const current = await getSettings();
+      if (!current.blockedSites.includes(newSite)) {
+        const updated = [...current.blockedSites, newSite];
+        chrome.storage.local.set({ blockedSites: updated }, () => {
+          newSiteInput.value = "";
+          renderSettings();
+        });
+      }
+    }
+  };
+
+  renderSettings();
+  updateLockUI();
+
   // Timer Logic
-  let timeLeft = 60;
   const timerVal = container.querySelector("#timer-val");
-  
+  let timeLeft = 60;
+  let timerInterval;
+
   // Start the particle hourglass animation
   const hgAnimation = window.startHourglass ? window.startHourglass(container) : null;
 
-  const timerInterval = setInterval(() => {
-    timeLeft--;
+  getSettings().then(s => {
+    timeLeft = s.duration;
     timerVal.textContent = timeLeft;
 
-    if (timeLeft <= 0) {
-      clearInterval(timerInterval);
-      if (hgAnimation && hgAnimation.stop) hgAnimation.stop();
-      timerVal.textContent = "0";
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      timerVal.textContent = timeLeft;
 
-      setTimeout(() => {
-        container.style.opacity = "0";
-        container.style.transition = "opacity 0.8s ease";
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        if (hgAnimation && hgAnimation.stop) hgAnimation.stop();
+        timerVal.textContent = "0";
+
         setTimeout(() => {
-          container.remove();
-          // Resume videos
-          document.querySelectorAll("video").forEach((v) => {
-            v.muted = false;
-            v.play();
-          });
-        }, 800);
-      }, 1000);
-    }
-  }, 1000);
+          container.style.opacity = "0";
+          container.style.transition = "opacity 0.8s ease";
+          setTimeout(() => {
+            container.remove();
+            // Resume videos
+            document.querySelectorAll("video").forEach((v) => {
+              v.muted = false;
+              v.play();
+            });
+          }, 800);
+        }, 1000);
+      }
+    }, 1000);
+  });
 
   // Fetch Quote
   async function updateQuote() {
@@ -311,29 +829,29 @@ function createSandglassTimer() {
 }
 
 // Function to check if this is a blocked URL
-function isBlockedUrl() {
-  const url = window.location.href;
-  return (
-    url.includes("/shorts/") ||
-    url.includes("/reels/") ||
-    url.includes("youtube.com")
-  );
+async function isBlockedUrl() {
+  const url = window.location.href.toLowerCase();
+  const settings = await getSettings();
+  return settings.blockedSites.some(site => url.includes(site));
 }
 
 // Main function to manage viewing and apply timer
 async function manageViewing() {
-  if (isBlockedUrl() && !document.querySelector(".blocker-container")) {
+  const shouldBlock = await isBlockedUrl();
+  if (shouldBlock && !document.querySelector(".blocker-container")) {
     const timer = createSandglassTimer();
+    const settings = await getSettings();
+    const durationMs = settings.duration * 1000;
 
-    // Wait 60 seconds
-    await new Promise((resolve) => setTimeout(resolve, 60000));
+    // Wait for the configured duration
+    await new Promise((resolve) => setTimeout(resolve, durationMs));
 
     // Remove timer overlay
     timer.removeTimer();
 
-    // Set timer to appear again after 1 minute of watching
+    // Set timer to appear again after 1 minute of watching (could also be configurable)
     setTimeout(() => {
-      createSandglassTimer();
+      manageViewing();
     }, 60000);
   }
 }
