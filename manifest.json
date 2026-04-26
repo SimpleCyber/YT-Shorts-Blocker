@@ -17,8 +17,8 @@
         "*://www.youtube.com/*",
         "*://www.instagram.com/*"
       ],
-      "js": ["content.js"],
-      "css": ["styles.css"]
+      "js": ["timer.js", "content.js"],
+      "css": ["timer.css", "styles.css"]
     }
   ]
 }

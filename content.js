@@ -1,522 +1,352 @@
 // Function to create and inject the sandglass timer
 function createSandglassTimer() {
-    // Create stylesheet for the timer
-    const styleEl = document.createElement('style');
-    styleEl.textContent = `
-      :root {
-        --bg-color: #f5f5f5;
-        --text-color: #333;
-        --glass-color: rgba(255, 255, 255, 0.3);
-        --sand-color: #e2c496;
-        --glass-border: #a0a0a0;
-        --glass-shadow: rgba(0, 0, 0, 0.2);
-        --quote-bg: rgba(255, 255, 255, 0.9);
-        --hourglass-outline: #888;
-      }
-  
-      .dark-mode {
-        --bg-color: #222;
-        --text-color: #f5f5f5;
-        --glass-color: rgba(30, 30, 30, 0.5);
-        --sand-color: #d4a76a;
-        --glass-border: #555;
-        --glass-shadow: rgba(0, 0, 0, 0.5);
-        --quote-bg: rgba(30, 30, 30, 0.9);
-        --hourglass-outline: #aaa;
-      }
-  
-      .quote-container {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background-color: var(--bg-color);
-        color: var(--text-color);
-        z-index: 9999;
-        font-family: Arial, sans-serif;
-        transition: all 0.3s ease;
-      }
-  
-      .content-wrapper {
-        width: 80%;
-        max-width: 600px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        background-color: var(--quote-bg);
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 4px 25px var(--glass-shadow);
-      }
-  
-      .quote-text {
-        font-size: 24px;
-        font-weight: 500;
-        margin-bottom: 15px;
-        line-height: 1.4;
-      }
-  
-      .quote-author {
-        font-size: 20px;
-        font-style: italic;
-        margin-bottom: 30px;
-      }
-  
-      .info-text {
-        font-size: 20px;
-        margin: 15px 0;
-      }
-  
-      .timer-display {
-        font-size: 28px;
-        font-weight: bold;
-        margin: 10px 0;
-      }
-  
-      .sandglass-container {
-        position: relative;
-        width: 200px;
-        height: 320px;
-        margin: 20px 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-  
-      .hourglass {
-        position: relative;
-        width: 140px;
-        height: 220px;
-      }
-  
-      /* Realistic hourglass shape with pseudo-elements */
-      .hourglass-top {
-        position: absolute;
-        width: 100%;
-        height: 100px;
-        top: 0;
-        border-radius: 50% 50% 0 0;
-        border: 2px solid var(--hourglass-outline);
-        border-bottom: none;
-        background-color: var(--glass-color);
-        overflow: hidden;
-        box-shadow: inset 0 10px 15px rgba(255, 255, 255, 0.3);
-      }
-  
-      .hourglass-middle {
-        position: absolute;
-        width: 30px;
-        height: 20px;
-        left: 55px;
-        top: 100px;
-        background-color: var(--hourglass-outline);
-        z-index: 3;
-      }
-  
-      .hourglass-bottom {
-        position: absolute;
-        width: 100%;
-        height: 100px;
-        bottom: 0;
-        border-radius: 0 0 50% 50%;
-        border: 2px solid var(--hourglass-outline);
-        border-top: none;
-        background-color: var(--glass-color);
-        overflow: hidden;
-        box-shadow: inset 0 -10px 15px rgba(255, 255, 255, 0.3);
-      }
-  
-      .hourglass-neck {
-        position: absolute;
-        width: 30px;
-        height: 20px;
-        left: 55px;
-        top: 100px;
-        background-color: var(--glass-color);
-        border-left: 2px solid var(--hourglass-outline);
-        border-right: 2px solid var(--hourglass-outline);
-        z-index: 2;
-      }
-  
-      .top-sand, .bottom-sand {
-        position: absolute;
-        background-color: var(--sand-color);
-        left: 50%;
-        transform: translateX(-50%);
-        border-radius: 50%;
-        transition: height 0.5s linear;
-      }
-  
-      .top-sand {
-        width: 80%;
-        height: 80px;
-        top: 10px;
-        clip-path: polygon(0% 0%, 100% 0%, 85% 100%, 15% 100%);
-      }
-  
-      .bottom-sand {
-        width: 80%;
-        height: 0px;
-        bottom: 10px;
-        clip-path: polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%);
-      }
-  
-      .sand-stream {
-        position: absolute;
-        width: 4px;
-        height: 20px;
-        left: 68px;
-        top: 100px;
-        background-color: var(--sand-color);
-        opacity: 0;
-        z-index: 1;
-      }
-  
-      .sand-particles {
-        position: absolute;
-        width: 50px;
-        height: 50px;
-        left: 45px;
-        top: 115px;
-        opacity: 0;
-      }
-  
-      .particle {
-        position: absolute;
-        width: 3px;
-        height: 3px;
-        background-color: var(--sand-color);
-        border-radius: 50%;
-        opacity: 0;
-      }
-  
-      .theme-toggle {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        background: none;
-        border: none;
-        font-size: 24px;
-        color: var(--text-color);
-        cursor: pointer;
-        z-index: 10000;
-        padding: 10px;
-        border-radius: 50%;
-        background-color: var(--glass-color);
-        box-shadow: 0 2px 10px var(--glass-shadow);
-      }
-  
-      .theme-toggle:hover {
-        transform: scale(1.1);
-      }
-  
-      @media (max-width: 600px) {
-        .content-wrapper {
-          width: 90%;
-          padding: 20px;
-        }
-        
-        .quote-text {
-          font-size: 20px;
-        }
-        
-        .sandglass-container {
-          transform: scale(0.9);
-        }
-      }
-    `;
-    document.head.appendChild(styleEl);
-  
-    // Load Font Awesome
-    if (!document.getElementById('font-awesome-link')) {
-      const fontAwesome = document.createElement('link');
-      fontAwesome.id = 'font-awesome-link';
-      fontAwesome.rel = 'stylesheet';
-      fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
-      document.head.appendChild(fontAwesome);
+  // Add Google Fonts
+  if (!document.getElementById("outfit-font")) {
+    const fontLink = document.createElement("link");
+    fontLink.id = "outfit-font";
+    fontLink.rel = "stylesheet";
+    fontLink.href =
+      "https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap";
+    document.head.appendChild(fontLink);
+  }
+
+  // Create stylesheet for the enhanced UI
+  const styleEl = document.createElement("style");
+  styleEl.textContent = `
+    :root {
+      --primary: #6366f1;
+      --primary-glow: rgba(99, 102, 241, 0.5);
+      --bg-overlay: rgba(15, 23, 42, 0.8);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --text-main: #f8fafc;
+      --text-dim: #94a3b8;
+      --accent: #f59e0b;
+      --sand: #fbbf24;
     }
-  
-    // Create container
-    const container = document.createElement('div');
-    container.className = 'quote-container';
-    
-    // Create content wrapper
-    const contentWrapper = document.createElement('div');
-    contentWrapper.className = 'content-wrapper';
-    
-    // Create quote elements
-    const quoteText = document.createElement('div');
-    quoteText.className = 'quote-text';
-    quoteText.textContent = 'Loading quote...';
-    
-    const quoteAuthor = document.createElement('div');
-    quoteAuthor.className = 'quote-author';
-    quoteAuthor.textContent = '- Loading author';
-    
-    const infoText = document.createElement('div');
-    infoText.className = 'info-text';
-    infoText.textContent = 'Please wait before watching.';
-  
-    // Create sandglass
-    const sandglassContainer = document.createElement('div');
-    sandglassContainer.className = 'sandglass-container';
-    
-    const hourglass = document.createElement('div');
-    hourglass.className = 'hourglass';
-    
-    const hourglassTop = document.createElement('div');
-    hourglassTop.className = 'hourglass-top';
-    
-    const hourglassMiddle = document.createElement('div');
-    hourglassMiddle.className = 'hourglass-middle';
-    
-    const hourglassBottom = document.createElement('div');
-    hourglassBottom.className = 'hourglass-bottom';
-    
-    const hourglassNeck = document.createElement('div');
-    hourglassNeck.className = 'hourglass-neck';
-    
-    const topSand = document.createElement('div');
-    topSand.className = 'top-sand';
-    
-    const bottomSand = document.createElement('div');
-    bottomSand.className = 'bottom-sand';
-    
-    const sandStream = document.createElement('div');
-    sandStream.className = 'sand-stream';
-    
-    const sandParticles = document.createElement('div');
-    sandParticles.className = 'sand-particles';
-    
-    // Create 10 sand particles
-    for (let i = 0; i < 10; i++) {
-      const particle = document.createElement('div');
-      particle.className = 'particle';
-      sandParticles.appendChild(particle);
+
+    .blocker-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      background: radial-gradient(circle at top right, #1e293b, #0f172a);
+      color: var(--text-main);
+      z-index: 2147483647;
+      font-family: 'Outfit', sans-serif;
+      overflow: hidden;
+      animation: fadeIn 0.5s ease-out;
     }
-    
-    hourglassTop.appendChild(topSand);
-    hourglassBottom.appendChild(bottomSand);
-    hourglass.appendChild(hourglassTop);
-    hourglass.appendChild(hourglassMiddle);
-    hourglass.appendChild(hourglassBottom);
-    hourglass.appendChild(hourglassNeck);
-    hourglass.appendChild(sandStream);
-    hourglass.appendChild(sandParticles);
-    sandglassContainer.appendChild(hourglass);
-    
-    // Create timer display
-    const timerDisplay = document.createElement('div');
-    timerDisplay.className = 'timer-display';
-    timerDisplay.textContent = '60';
-    
-    // Create theme toggle button
-    const themeToggle = document.createElement('button');
-    themeToggle.className = 'theme-toggle';
-    themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-    themeToggle.title = 'Toggle dark mode';
-    
-    // Assemble the UI
-    contentWrapper.appendChild(quoteText);
-    contentWrapper.appendChild(quoteAuthor);
-    contentWrapper.appendChild(infoText);
-    contentWrapper.appendChild(sandglassContainer);
-    contentWrapper.appendChild(timerDisplay);
-    
-    container.appendChild(themeToggle);
-    container.appendChild(contentWrapper);
-    
-    document.body.appendChild(container);
-    
-    // Animation functions
-    function animateSandParticles() {
-      const particles = document.querySelectorAll('.particle');
-      particles.forEach((particle, index) => {
-        // Random position within the sandParticles container
-        const leftPos = Math.random() * 30;
-        const delay = index * 200;
-        
-        // Reset and animate each particle
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .info-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 10% 8%;
+      backdrop-filter: blur(8px);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .timer-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.02);
+      position: relative;
+    }
+
+    .app-title {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      color: var(--primary);
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .quote-wrap {
+      position: relative;
+      margin-bottom: 40px;
+    }
+
+    .quote-text {
+      font-size: clamp(28px, 4vw, 48px);
+      line-height: 1.2;
+      font-weight: 700;
+      margin-bottom: 20px;
+      background: linear-gradient(to bottom right, #fff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .quote-author {
+      font-size: 18px;
+      color: var(--text-dim);
+      font-weight: 300;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .quote-author::before {
+      content: '';
+      width: 30px;
+      height: 1px;
+      background: var(--primary);
+    }
+
+    .tips-container {
+      margin-top: auto;
+      padding: 20px;
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .tip-heading {
+      font-size: 14px;
+      color: var(--accent);
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .tip-content {
+      font-size: 15px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    .hourglass-container {
+      position: relative;
+      width: 200px;
+      height: 300px;
+      margin-bottom: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .countdown-wrap {
+      text-align: center;
+      position: relative;
+    }
+
+    .timer-value {
+      font-size: 72px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 5px;
+    }
+
+    .timer-label {
+      font-size: 14px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .theme-toggle {
+      position: absolute;
+      top: 30px;
+      right: 30px;
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .theme-toggle:hover {
+      background: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 900px) {
+      .blocker-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr auto;
+      }
+      .info-panel {
+        padding: 60px 40px 20px;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .timer-panel {
+        padding: 40px;
+      }
+    }
+  `;
+  document.head.appendChild(styleEl);
+
+  // Load Font Awesome if not present
+  if (!document.getElementById("fa-link")) {
+    const fa = document.createElement("link");
+    fa.id = "fa-link";
+    fa.rel = "stylesheet";
+    fa.href =
+      "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
+    document.head.appendChild(fa);
+  }
+
+  // Create HTML Structure
+  const container = document.createElement("div");
+  container.className = "blocker-container";
+
+  container.innerHTML = `
+    <div class="info-panel">
+      <div class="app-title">Shorts Blocker</div>
+      <div class="quote-wrap">
+        <div class="quote-text" id="quote-text">"Distraction is the thief of time."</div>
+        <div class="quote-author" id="quote-author">Marcus Aurelius</div>
+      </div>
+      <div class="tips-container">
+        <div class="tip-heading">💡 FOCUS TIP</div>
+        <div class="tip-content" id="focus-tip">Did you know? It takes average 23 minutes to regain full focus after a single distraction.</div>
+      </div>
+    </div>
+    <div class="timer-panel">
+      <button class="theme-toggle" id="theme-toggler">
+        <i class="fas fa-moon"></i>
+      </button>
+      <div class="hourglass-container">
+          <div class="outer-wrapper">
+            <div class="wrapper">
+              <div class="glass"></div>
+              <div class="glass"></div>
+              <div class="glass"></div>
+              <div class="glass"></div>
+              <svg width="100%" height="100%" fill="transparent"></svg>
+            </div>
+          </div>
+      </div>
+      <div class="countdown-wrap">
+        <div class="timer-value" id="timer-val">60</div>
+        <div class="timer-label">seconds left</div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(container);
+
+  // Focus tips database
+  const tips = [
+    "It takes an average of 23 minutes to regain full focus after a distraction.",
+    "Deep work sessions of 90 minutes are more effective than 8 hours of distracted work.",
+    "The 5-second rule: If you have an impulse to act on a goal, you must physically move within 5 seconds.",
+    "Multitasking is a myth; your brain is just switching between tasks rapidly, losing efficiency.",
+    "A clean workspace leads to a clean mind and better focus.",
+  ];
+
+  const focusTipEl = container.querySelector("#focus-tip");
+  focusTipEl.textContent = tips[Math.floor(Math.random() * tips.length)];
+
+  // Timer Logic
+  let timeLeft = 60;
+  const timerVal = container.querySelector("#timer-val");
+  
+  // Start the particle hourglass animation
+  const hgAnimation = window.startHourglass ? window.startHourglass(container) : null;
+
+  const timerInterval = setInterval(() => {
+    timeLeft--;
+    timerVal.textContent = timeLeft;
+
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      if (hgAnimation && hgAnimation.stop) hgAnimation.stop();
+      timerVal.textContent = "0";
+
+      setTimeout(() => {
+        container.style.opacity = "0";
+        container.style.transition = "opacity 0.8s ease";
         setTimeout(() => {
-          particle.style.left = `${leftPos}px`;
-          particle.style.top = '0px';
-          particle.style.opacity = '0.8';
-          
-          // Animation
-          let pos = 0;
-          const id = setInterval(() => {
-            if (pos >= 30) {
-              clearInterval(id);
-              particle.style.opacity = '0';
-            } else {
-              pos++;
-              particle.style.top = `${pos}px`;
-              particle.style.opacity = 0.8 - (pos / 30);
-            }
-          }, 50);
-        }, delay);
-      });
-    }
-    
-    // Create animation loop for sand falling
-    function startSandAnimation() {
-      sandStream.style.opacity = '1';
-      sandParticles.style.opacity = '1';
-      
-      // Start sand particle animation
-      setInterval(animateSandParticles, 2000);
-    }
-    
-    // Fetch a random quote
-    async function fetchQuote() {
-      try {
-        const response = await fetch('https://api.quotable.io/random');
-        const data = await response.json();
-        return data;
-      } catch (error) {
-        console.error('Error fetching quote:', error);
-        return {
-          content: 'Take a break from endless scrolling and do something meaningful!',
-          author: 'Digital Wellbeing Timer'
-        };
-      }
-    }
-    
-    // Update quote display
-    async function updateQuote() {
-      const quote = await fetchQuote();
-      quoteText.textContent = `"${quote.content}"`;
-      quoteAuthor.textContent = `- ${quote.author}`;
-    }
-    
-    // Theme toggle functionality
-    function toggleTheme() {
-      document.body.classList.toggle('dark-mode');
-      container.classList.toggle('dark-mode');
-      const isDark = document.body.classList.contains('dark-mode');
-      themeToggle.innerHTML = isDark ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
-      localStorage.setItem('darkMode', isDark);
-    }
-    
-    // Apply saved theme
-    if (localStorage.getItem('darkMode') === 'true') {
-      document.body.classList.add('dark-mode');
-      container.classList.add('dark-mode');
-      themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-    }
-    
-    themeToggle.addEventListener('click', toggleTheme);
-    
-    // Timer functionality
-    let timerDuration = 60;
-    let timeRemaining = timerDuration;
-    let timerInterval;
-    
-    function updateTimerDisplay() {
-      timerDisplay.textContent = timeRemaining;
-      
-      // Calculate sand levels
-      const sandPercentage = timeRemaining / timerDuration;
-      const topHeight = sandPercentage * 80;
-      const bottomHeight = 80 - topHeight;
-      
-      topSand.style.height = `${topHeight}px`;
-      bottomSand.style.height = `${bottomHeight}px`;
-    }
-    
-    function startTimer() {
-      startSandAnimation();
-      
-      timerInterval = setInterval(() => {
-        if (timeRemaining <= 0) {
-          clearInterval(timerInterval);
-          timerComplete();
-          return;
-        }
-        
-        timeRemaining--;
-        updateTimerDisplay();
+          container.remove();
+          // Resume videos
+          document.querySelectorAll("video").forEach((v) => {
+            v.muted = false;
+            v.play();
+          });
+        }, 800);
       }, 1000);
     }
-    
-    function timerComplete() {
-      infoText.textContent = "Time's up! You can continue watching.";
-      sandStream.style.opacity = '0';
-      sandParticles.style.opacity = '0';
-      
-      setTimeout(() => {
-        container.style.display = 'none';
-        // Unmute and play videos
-        const videos = document.querySelectorAll('video');
-        videos.forEach(video => {
-          video.muted = false;
-          video.play();
-        });
-      }, 2000);
-    }
-    
-    // Mute and pause videos
-    function muteAndPauseVideos() {
-      const videos = document.querySelectorAll('video');
-      videos.forEach(video => {
-        video.pause();
-        video.muted = true;
-      });
-    }
-    
-    // Initialize
-    updateQuote();
-    updateTimerDisplay();
-    muteAndPauseVideos();
-    startTimer();
-    
-    return {
-      removeTimer: () => {
-        container.remove();
-        clearInterval(timerInterval);
-      }
-    };
-  }
-  
-  // Function to check if this is a blocked URL
-  function isBlockedUrl() {
-    const url = window.location.href;
-    return url.includes('/shorts/') || url.includes('/reels/') || url.includes('youtube.com');
-  }
-  
-  // Main function to manage viewing and apply timer
-  async function manageViewing() {
-    if (isBlockedUrl()) {
-      const timer = createSandglassTimer();
-      
-      // Wait 60 seconds
-      await new Promise(resolve => setTimeout(resolve, 60000));
-      
-      // Remove timer overlay
-      timer.removeTimer();
-      
-      // Set timer to appear again after 1 minute of watching
-      setTimeout(() => {
-        createSandglassTimer();
-      }, 60000);
+  }, 1000);
+
+  // Fetch Quote
+  async function updateQuote() {
+    try {
+      const response = await fetch(
+        "https://api.quotable.io/random?tags=wisdom|inspirational",
+      );
+      const data = await response.json();
+      document.getElementById("quote-text").textContent = `"${data.content}"`;
+      document.getElementById("quote-author").textContent = data.author;
+    } catch (e) {
+      console.log("Using fallback quote");
     }
   }
-  
-  // Monitor URL changes for SPAs
-  let lastUrl = location.href;
-  new MutationObserver(() => {
-    const url = location.href;
-    if (url !== lastUrl) {
-      lastUrl = url;
-      manageViewing();
-    }
-  }).observe(document, { subtree: true, childList: true });
-  
-  // Initial check
-  manageViewing();
+  updateQuote();
+
+  // Return API
+  return {
+    removeTimer: () => {
+      clearInterval(timerInterval);
+      container.remove();
+    },
+  };
+}
+
+// Function to check if this is a blocked URL
+function isBlockedUrl() {
+  const url = window.location.href;
+  return (
+    url.includes("/shorts/") ||
+    url.includes("/reels/") ||
+    url.includes("youtube.com")
+  );
+}
+
+// Main function to manage viewing and apply timer
+async function manageViewing() {
+  if (isBlockedUrl() && !document.querySelector(".blocker-container")) {
+    const timer = createSandglassTimer();
+
+    // Wait 60 seconds
+    await new Promise((resolve) => setTimeout(resolve, 60000));
+
+    // Remove timer overlay
+    timer.removeTimer();
+
+    // Set timer to appear again after 1 minute of watching
+    setTimeout(() => {
+      createSandglassTimer();
+    }, 60000);
+  }
+}
+
+// Monitor URL changes for SPAs
+let lastUrl = location.href;
+new MutationObserver(() => {
+  const url = location.href;
+  if (url !== lastUrl) {
+    lastUrl = url;
+    manageViewing();
+  }
+}).observe(document, { subtree: true, childList: true });
+
+// Initial check
+manageViewing();
