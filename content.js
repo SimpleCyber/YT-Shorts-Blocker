@@ -798,10 +798,6 @@ function createSandglassTimer() {
     }
   };
 
-  newSiteInput.oninput = () => {
-    siteError.style.display = "none";
-  };
-
   renderSettings();
   updateLockUI();
 
