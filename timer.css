@@ -10,8 +10,8 @@
 
 .outer-wrapper {
   position: relative;
-  height: 300px;
-  width: 200px;
+  height: 450px;
+  width: 320px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -25,7 +25,7 @@
   border-width: 2px 0;
   width: 300px;
   height: 440px;
-  transform: scale(0.6); /* Scale down to fit 200x300 */
+  transform: scale(0.8); /* Increased scale from 0.6 */
 }
 
 .wrapper::before,

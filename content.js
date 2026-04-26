@@ -184,8 +184,8 @@ function createSandglassTimer() {
 
     .hourglass-container {
       position: relative;
-      width: 200px;
-      height: 300px;
+      width: 320px;
+      height: 450px;
       margin-bottom: 30px;
       display: flex;
       align-items: center;
@@ -751,7 +751,10 @@ function createSandglassTimer() {
   };
 
   addSiteBtn.onclick = async () => {
-    const newSite = newSiteInput.value.trim().toLowerCase();
+    let newSite = newSiteInput.value.trim().toLowerCase();
+    // Remove protocol (http/https), www prefix, and trailing slashes
+    newSite = newSite.replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/+$/, '');
+    
     if (newSite) {
       const current = await getSettings();
       if (!current.blockedSites.includes(newSite)) {
