@@ -487,7 +487,7 @@ function createSandglassTimer() {
   // Function to check if this is a blocked URL
   function isBlockedUrl() {
     const url = window.location.href;
-    return url.includes('/shorts/') || url.includes('/reels/');
+    return url.includes('/shorts/') || url.includes('/reels/') || url.includes('youtube.com');
   }
   
   // Main function to manage viewing and apply timer
