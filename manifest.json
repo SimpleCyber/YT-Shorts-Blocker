@@ -2,20 +2,21 @@
   "manifest_version": 3,
   "name": "FocusShield: Content & Distraction Blocker",
   "version": "1.2",
-  "description": "Reclaim your focus by blocking addictive short-form content. Transform distractions into moments of reflection with custom block lists and secure timed locks.",
+  "description": "Reclaim your focus by blocking addictive short-form content.",
   "icons": {
     "48": "icon.png"
   },
-  "permissions": ["scripting", "storage"],
+  "permissions": [
+    "scripting",
+    "storage"
+  ],
   "host_permissions": [
-    "*://www.youtube.com/*",
-    "*://www.instagram.com/*"
+    "<all_urls>"
   ],
   "content_scripts": [
     {
       "matches": [
-        "*://www.youtube.com/*",
-        "*://www.instagram.com/*"
+        "*://*/*"
       ],
       "js": ["timer.js", "content.js"],
       "css": ["timer.css", "styles.css"]
