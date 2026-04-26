@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "FocusShield: Content & Distraction Blocker",
-  "version": "1.3",
+  "version": "1.3.1",
   "description": "Reclaim your focus and boost productivity by blocking addictive short-form content like YouTube Shorts and Instagram Reels.",
   "icons": {
     "48": "icon.png"
@@ -31,7 +31,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["options.html", "privacy.html", "privacy.css", "options.js"],
+      "resources": ["options.html", "privacy.html", "privacy.css", "options.js", "landing.css", "index.html"],
       "matches": ["<all_urls>"]
     }
   ]
