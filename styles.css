@@ -11,7 +11,7 @@
 }
 
 
-#activate-lock-btn {
+.blocker-container #activate-lock-btn {
     margin-top: 15px;
     margin-bottom: 20px;
 }

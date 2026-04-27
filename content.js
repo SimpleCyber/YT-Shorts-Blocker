@@ -70,7 +70,7 @@ function createSandglassTimer() {
   // Create stylesheet for the enhanced UI
   const styleEl = document.createElement("style");
   styleEl.textContent = `
-    :root {
+    .blocker-container {
       --primary: #6366f1;
       --primary-glow: rgba(99, 102, 241, 0.5);
       --bg-overlay: rgba(15, 23, 42, 0.8);
@@ -866,7 +866,9 @@ function createSandglassTimer() {
 async function isBlockedUrl() {
   const url = window.location.href.toLowerCase();
   const settings = await getSettings();
-  return settings.blockedSites.some(site => url.includes(site));
+  return settings.blockedSites
+    .filter(site => site.trim().length > 0)
+    .some(site => url.includes(site));
 }
 
 // Main function to manage viewing and apply timer
