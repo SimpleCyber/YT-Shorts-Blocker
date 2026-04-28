@@ -7,7 +7,6 @@
     "48": "icon.png"
   },
   "permissions": [
-    "scripting",
     "storage"
   ],
   "host_permissions": [
