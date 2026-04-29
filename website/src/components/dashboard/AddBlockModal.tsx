@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { MODAL_CATEGORIES, SUGGESTED_SITES, ADULT_KEYWORDS } from "../../lib/extensionBridge";
+import { MODAL_CATEGORIES, SUGGESTED_SITES, ADULT_KEYWORDS, FREE_LIMIT } from "../../lib/extensionBridge";
 import { useFocusData } from "../../lib/FocusDataContext";
+import LimitModal from "./LimitModal";
 
 interface AddBlockModalProps {
   isOpen: boolean;
@@ -20,6 +21,8 @@ export default function AddBlockModal({ isOpen, mode, isAdminUnlocked, onClose, 
   const [searchText, setSearchText] = useState("");
   const [showAllWebsites, setShowAllWebsites] = useState(false);
   const [activeTab, setActiveTab] = useState<"all" | "websites" | "keywords" | "categories">("all");
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [limitModalData, setLimitModalData] = useState({ title: "", message: "" });
 
   const toggleSite = (site: string) => {
     setSelectedSites((prev) => {
@@ -57,6 +60,21 @@ export default function AddBlockModal({ isOpen, mode, isAdminUnlocked, onClose, 
 
   const handleDone = async () => {
     if (selectedSites.size === 0 && selectedCategories.size === 0 && selectedKeywords.size === 0) return;
+
+    const currentTotal = mode === "block" 
+      ? (data.blockedSites.length + data.blockedCategories.length + (data.blockedKeywords.length > 0 ? 1 : 0))
+      : data.usageLimits.length;
+    
+    const newItemsCount = selectedSites.size + selectedCategories.size + (selectedKeywords.size > 0 ? 1 : 0);
+
+    if (!isAdminUnlocked && (currentTotal + newItemsCount) > FREE_LIMIT) {
+      setLimitModalData({
+        title: "Limit Reached!",
+        message: `Your free plan allows only ${FREE_LIMIT} ${mode === "block" ? "blocked items" : "usage limits"}. Upgrade now to add unlimited sites and take full control of your focus.`
+      });
+      setShowLimitModal(true);
+      return;
+    }
 
     try {
       const updatedBlockedSites = [...data.blockedSites];
@@ -131,8 +149,31 @@ export default function AddBlockModal({ isOpen, mode, isAdminUnlocked, onClose, 
   const filteredCategories = MODAL_CATEGORIES.filter(
     (cat) => cat.name.toLowerCase().includes(filter) || cat.sites.some((s) => s.includes(filter))
   );
+  
   let displaySites = SUGGESTED_SITES.filter((s) => s.name.includes(filter));
+  
+  // Add custom suggestion from search text
+  if (filter && !displaySites.find(s => s.name === filter)) {
+    // Basic domain extraction for display
+    const customSite = filter.replace(/^(https?:\/\/)?(www\.)?/, "").replace(/\/+$/, "");
+    if (customSite) {
+      displaySites = [{ name: customSite, icon: customSite }, ...displaySites];
+    }
+  }
+
   if (!showAllWebsites && filter === "" && activeTab === "all") displaySites = displaySites.slice(0, 4);
+
+  const isAlreadyAdded = (type: "site" | "category" | "keyword", value: string) => {
+    if (mode === "block") {
+      if (type === "site") return data.blockedSites.includes(value);
+      if (type === "category") return data.blockedCategories.includes(value);
+      if (type === "keyword") return data.blockedKeywords.includes(value);
+    } else {
+      if (type === "site") return data.usageLimits.some(u => u.domain === value);
+      if (type === "category") return false; // Usage limits are domain-based
+    }
+    return false;
+  };
 
   const totalSelected = selectedSites.size + selectedCategories.size + selectedKeywords.size;
 
@@ -143,8 +184,8 @@ export default function AddBlockModal({ isOpen, mode, isAdminUnlocked, onClose, 
     >
       <div className="add-modal">
         <div className="modal-header">
-          <h2 className="modal-title">Add to Block List</h2>
-          <div className="modal-subtitle">Choose which to block</div>
+          <h2 className="modal-title">{mode === "block" ? "Add to Block List" : "Add Usage Limit"}</h2>
+          <div className="modal-subtitle">Choose which to {mode === "block" ? "block" : "limit"}</div>
         </div>
 
         <div className="modal-search-bar">
@@ -176,14 +217,18 @@ export default function AddBlockModal({ isOpen, mode, isAdminUnlocked, onClose, 
                 {filteredCategories.map((cat) => {
                   const isSelected = selectedCategories.has(cat.id);
                   return (
-                    <div className="suggestion-card" key={cat.id} style={{ cursor: "pointer" }} onClick={() => toggleCategory(cat.id)}>
+                    <div className="suggestion-card" key={cat.id} style={{ cursor: isAlreadyAdded("category", cat.id) ? "default" : "pointer" }} onClick={() => !isAlreadyAdded("category", cat.id) && toggleCategory(cat.id)}>
                       <div className="suggestion-info">
                         <div className="suggestion-icon"><i className={`fas ${cat.icon}`} style={{ color: cat.color }}></i></div>
                         <span className="suggestion-name">{cat.name}</span>
                       </div>
-                      <button className={`btn-add-item ${isSelected ? "selected" : ""}`} style={{ pointerEvents: "none" }}>
-                        <i className={`fas ${isSelected ? "fa-check" : "fa-plus"}`}></i>
-                      </button>
+                      {isAlreadyAdded("category", cat.id) ? (
+                        <span style={{ fontSize: "12px", color: "var(--text-muted)", marginRight: "10px" }}>Already blocked</span>
+                      ) : (
+                        <button className={`btn-add-item ${isSelected ? "selected" : ""}`} style={{ pointerEvents: "none" }}>
+                          <i className={`fas ${isSelected ? "fa-check" : "fa-plus"}`}></i>
+                        </button>
+                      )}
                     </div>
                   );
                 })}
@@ -212,9 +257,13 @@ export default function AddBlockModal({ isOpen, mode, isAdminUnlocked, onClose, 
                         </div>
                         <span className="suggestion-name">{site.name}</span>
                       </div>
-                      <button className={`btn-add-item ${isSelected ? "selected" : ""}`} onClick={() => toggleSite(site.name)}>
-                        <i className={`fas ${isSelected ? "fa-check" : "fa-plus"}`}></i>
-                      </button>
+                      {isAlreadyAdded("site", site.name) ? (
+                        <span style={{ fontSize: "12px", color: "var(--text-muted)", marginRight: "10px" }}>Already blocked</span>
+                      ) : (
+                        <button className={`btn-add-item ${isSelected ? "selected" : ""}`} onClick={() => toggleSite(site.name)}>
+                          <i className={`fas ${isSelected ? "fa-check" : "fa-plus"}`}></i>
+                        </button>
+                      )}
                     </div>
                   );
                 })}
@@ -233,7 +282,7 @@ export default function AddBlockModal({ isOpen, mode, isAdminUnlocked, onClose, 
                   {Array.from(selectedKeywords).map((kw) => (
                     <div 
                       key={kw} 
-                      className="badge-active" 
+                      className={`badge-active ${isAlreadyAdded("keyword", kw) ? "blocked" : ""}`}
                       style={{ 
                         padding: "6px 12px", 
                         borderRadius: "20px", 
@@ -241,15 +290,17 @@ export default function AddBlockModal({ isOpen, mode, isAdminUnlocked, onClose, 
                         display: "flex", 
                         alignItems: "center", 
                         gap: "8px",
-                        cursor: "pointer"
+                        cursor: isAlreadyAdded("keyword", kw) ? "default" : "pointer",
+                        opacity: isAlreadyAdded("keyword", kw) ? 0.7 : 1
                       }}
                       onClick={() => {
+                        if (isAlreadyAdded("keyword", kw)) return;
                         const next = new Set(selectedKeywords);
                         next.delete(kw);
                         setSelectedKeywords(next);
                       }}
                     >
-                      {kw} <i className="fas fa-times" style={{ fontSize: "10px" }}></i>
+                      {kw} {isAlreadyAdded("keyword", kw) ? "(Blocked)" : <i className="fas fa-times" style={{ fontSize: "10px" }}></i>}
                     </div>
                   ))}
                 </div>
@@ -275,6 +326,14 @@ export default function AddBlockModal({ isOpen, mode, isAdminUnlocked, onClose, 
           </div>
         </div>
       </div>
+
+      <LimitModal 
+        isOpen={showLimitModal} 
+        onClose={() => setShowLimitModal(false)}
+        title={limitModalData.title}
+        message={limitModalData.message}
+        limit={FREE_LIMIT}
+      />
     </div>
   );
 }

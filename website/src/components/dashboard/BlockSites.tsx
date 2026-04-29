@@ -3,15 +3,18 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { getData, setData, DEFAULTS, MODAL_CATEGORIES, ADULT_KEYWORDS, FREE_LIMIT } from "../../lib/extensionBridge";
 import { useFocusData } from "../../lib/FocusDataContext";
+import ScheduleModal from "./ScheduleModal";
 
 interface BlockSitesProps {
   isAdminUnlocked: boolean;
+  showUpgrade: boolean;
   onOpenModal: () => void;
 }
 
-export default function BlockSites({ isAdminUnlocked, onOpenModal }: BlockSitesProps) {
+export default function BlockSites({ isAdminUnlocked, showUpgrade, onOpenModal }: BlockSitesProps) {
   const { data, updateData } = useFocusData();
   const { blockedSites, blockedCategories, blockedKeywords, isWhitelistMode } = data;
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
   const deleteSite = (site: string) => {
     updateData({ blockedSites: blockedSites.filter((s) => s !== site) });
@@ -43,7 +46,7 @@ export default function BlockSites({ isAdminUnlocked, onOpenModal }: BlockSitesP
           <h1 className="page-title">Block List</h1>
           <p className="page-desc">Block sites permanently or by schedule</p>
         </div>
-        <button className="btn btn-outline">
+        <button className="btn btn-outline" onClick={() => setIsScheduleModalOpen(true)}>
           <i className="far fa-clock"></i> Schedule
         </button>
       </div>
@@ -147,7 +150,7 @@ export default function BlockSites({ isAdminUnlocked, onOpenModal }: BlockSitesP
         )}
       </div>
 
-      {!isAdminUnlocked && (
+      {(!isAdminUnlocked && showUpgrade) && (
         <div className="banner-upgrade premium-element">
           <div className="banner-text">
             <strong>{remaining > 0 ? remaining : 0} place{remaining === 1 ? "" : "s"} left</strong> to add to your block list.{" "}
@@ -158,6 +161,13 @@ export default function BlockSites({ isAdminUnlocked, onOpenModal }: BlockSitesP
           <button className="btn-premium" style={{ width: "auto" }}>Go Unlimited</button>
         </div>
       )}
+
+      <ScheduleModal
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        isAdminUnlocked={isAdminUnlocked}
+        showUpgrade={showUpgrade}
+      />
     </section>
   );
 }

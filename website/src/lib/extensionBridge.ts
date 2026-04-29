@@ -98,6 +98,11 @@ export const DEFAULTS = {
   isBlockingEnabled: true,
   isWhitelistMode: false,
   usageLimits: [] as { domain: string; limitMinutes: number }[],
+  schedule: {
+    enabled: false,
+    intervals: [{ id: "1", start: "09:00", end: "17:00" }],
+    days: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+  },
 };
 
 export const ADULT_KEYWORDS = [
@@ -133,4 +138,4 @@ export const SUGGESTED_SITES = [
   { name: "hbomax.com", icon: "hbomax.com" },
 ];
 
-export const FREE_LIMIT = 5;
+export const FREE_LIMIT = 3;

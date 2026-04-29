@@ -3,11 +3,20 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { getData } from "../../lib/extensionBridge";
 
-export default function Insights() {
+interface InsightsProps {
+  isAdminUnlocked: boolean;
+}
+
+export default function Insights({ isAdminUnlocked }: InsightsProps) {
+  const [timeRange, setTimeRange] = useState<"24h" | "7d" | "30d">("7d");
   const [avgTime, setAvgTime] = useState("No Data");
   const [topDay, setTopDay] = useState("No Data");
   const [topDistractions, setTopDistractions] = useState<{ domain: string; time: number; perc: number }[]>([]);
   const [totalTimeSecs, setTotalTimeSecs] = useState(0);
+  const [blockedAttempts, setBlockedAttempts] = useState(0);
+  const [timeSaved, setTimeSaved] = useState("0m");
+  const [topCategory, setTopCategory] = useState("No Data");
+  const [categoryBreakdown, setCategoryBreakdown] = useState<Record<string, number>>({});
 
   function formatTime(secs: number) {
     if (secs === 0) return "0m";
@@ -19,16 +28,23 @@ export default function Insights() {
 
   const loadData = useCallback(async () => {
     try {
+      const days = timeRange === "24h" ? 1 : timeRange === "7d" ? 7 : 30;
       const keys: string[] = [];
-      for (let i = 0; i < 7; i++) {
+      const statsKeys: string[] = [];
+      
+      for (let i = 0; i < days; i++) {
         const d = new Date();
         d.setDate(d.getDate() - i);
-        keys.push(`insights_${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        keys.push(`insights_${dateStr}`);
+        statsKeys.push(`stats_${dateStr}`);
       }
 
-      const result = await getData(keys);
+      const result = await getData([...keys, ...statsKeys]);
       let total = 0, daysWithData = 0, topDayVal = 0, topDayDate = "No Data";
+      let totalBlocked = 0;
       const domainTotals: Record<string, number> = {};
+      const categoryTotals: Record<string, number> = {};
 
       keys.forEach((key) => {
         const dayData = result[key] as Record<string, number> | undefined;
@@ -49,9 +65,30 @@ export default function Insights() {
         }
       });
 
+      statsKeys.forEach(key => {
+        const stats = result[key] as any;
+        if (stats) {
+          if (stats.blockedAttempts) totalBlocked += stats.blockedAttempts;
+          if (stats.blockedCategories) {
+            for (const [cat, count] of Object.entries(stats.blockedCategories)) {
+              categoryTotals[cat] = (categoryTotals[cat] as number || 0) + (count as number);
+            }
+          }
+        }
+      });
+
       setTotalTimeSecs(total);
+      setBlockedAttempts(totalBlocked);
+      // Rough estimate: Time saved is 2x blocked attempts in minutes
+      setTimeSaved(`${totalBlocked * 2}m`);
+      
       setAvgTime(daysWithData > 0 ? formatTime(total / daysWithData) : "No Data");
       setTopDay(topDayDate);
+
+      // Find top category
+      const topCatEntry = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0];
+      setTopCategory(topCatEntry ? topCatEntry[0].charAt(0).toUpperCase() + topCatEntry[0].slice(1) : "No Data");
+      setCategoryBreakdown(categoryTotals);
 
       const sorted = Object.entries(domainTotals).sort((a, b) => b[1] - a[1]);
       setTopDistractions(
@@ -61,8 +98,10 @@ export default function Insights() {
           perc: total > 0 ? Math.round((time / total) * 100) : 0,
         }))
       );
-    } catch { /* Extension not installed — expected in standalone mode */ }
-  }, []);
+    } catch (e) {
+      console.error("Failed to load insights", e);
+    }
+  }, [timeRange]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -74,40 +113,109 @@ export default function Insights() {
           <p className="page-desc">Track Your Focus and See How You Spend Time Online</p>
         </div>
         <div style={{ display: "flex", gap: "8px", background: "var(--bg-hover)", padding: "4px", borderRadius: "20px" }}>
-          <button className="btn" style={{ background: "white", borderRadius: "16px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)", padding: "6px 16px" }}>Last 7 days</button>
-          <button className="btn premium-element" style={{ background: "transparent", color: "var(--text-muted)", padding: "6px 16px" }}>Last 30 days <i className="fas fa-lock" style={{ fontSize: "10px" }}></i></button>
+          <button 
+            className={`btn-toggle ${timeRange === "24h" ? "active" : ""}`}
+            onClick={() => setTimeRange("24h")}
+          >
+            Today
+          </button>
+          <button 
+            className={`btn-toggle ${timeRange === "7d" ? "active" : ""}`}
+            onClick={() => setTimeRange("7d")}
+          >
+            Last 7 days
+          </button>
+          <button 
+            className={`btn-toggle ${timeRange === "30d" ? "active" : ""} ${!isAdminUnlocked ? "locked" : ""}`}
+            onClick={() => {
+              if (isAdminUnlocked) {
+                setTimeRange("30d");
+              } else {
+                // Optionally handle click for locked state (e.g., show upgrade modal)
+                console.log("30-day range is a premium feature");
+              }
+            }}
+          >
+            Last 30 days {!isAdminUnlocked && <i className="fas fa-lock" style={{ fontSize: "10px", marginLeft: "4px" }}></i>}
+          </button>
         </div>
       </div>
+
+      <style jsx>{`
+        .btn-toggle {
+          background: transparent;
+          border: none;
+          padding: 6px 16px;
+          border-radius: 16px;
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--text-muted);
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .btn-toggle.active {
+          background: white;
+          color: var(--primary);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .btn-toggle.locked {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        .btn-toggle.locked:hover {
+          background: rgba(0,0,0,0.02);
+        }
+      `}</style>
 
       <div className="insights-top-stats">
         <div className="stat-card"><div className="stat-label">Average Focus Time</div><div className="stat-value">{avgTime}</div></div>
         <div className="stat-card"><div className="stat-label">Top Focus Day</div><div className="stat-value">{topDay}</div></div>
-        <div className="stat-card"><div className="stat-label">Most Blocked Category</div><div className="stat-value">No Data</div></div>
+        <div className="stat-card"><div className="stat-label">Most Blocked Category</div><div className="stat-value">{topCategory}</div></div>
       </div>
 
       <div className="insights-charts">
-        <div className="chart-card">
-          <div className="chart-header"><span className="chart-title"><i className="far fa-clock"></i> Time Saved</span><span className="chart-date">Last 7 Days</span></div>
-          <div className="chart-content">Nothing to see yet</div>
-        </div>
-        <div className="chart-card">
-          <div className="chart-header"><span className="chart-title"><i className="fas fa-ban"></i> Blocked Attempts</span><span className="chart-date">Last 7 Days</span></div>
-          <div className="chart-content">Nothing to see yet</div>
-        </div>
-        <div className="chart-card">
-          <div className="chart-header"><span className="chart-title"><i className="fas fa-list"></i> Blocked Categories</span><span className="chart-date">Last 7 Days</span></div>
-          <div className="chart-content" style={{ flexDirection: "column", gap: "20px" }}>
-            <div style={{ width: "100px", height: "100px", borderRadius: "50%", border: "20px solid #f1f5f9" }}></div>
-            Nothing to see yet
+        {/* Chart Cards */}
+        {[
+          { title: "Time Saved", icon: "far fa-clock", value: timeSaved, date: timeRange === "24h" ? "Today" : `Last ${timeRange === "7d" ? "7" : "30"} Days` },
+          { title: "Blocked Attempts", icon: "fas fa-ban", value: blockedAttempts, date: timeRange === "24h" ? "Today" : `Last ${timeRange === "7d" ? "7" : "30"} Days` },
+          { title: "Blocked Categories", icon: "fas fa-list", value: topCategory, date: timeRange === "24h" ? "Today" : `Last ${timeRange === "7d" ? "7" : "30"} Days`, isPie: true }
+        ].map((chart, idx) => (
+          <div className="chart-card" key={idx}>
+            <div className="chart-header">
+              <span className="chart-title"><i className={chart.icon}></i> {chart.title}</span>
+              <span className="chart-date">{chart.date}</span>
+            </div>
+            <div className="chart-content" style={chart.isPie ? { flexDirection: "column", gap: "20px" } : {}}>
+              {(timeRange === "30d" && !isAdminUnlocked) ? (
+                <div style={{ textAlign: 'center', opacity: 0.6 }}>
+                  <i className="fas fa-lock" style={{ fontSize: '24px', marginBottom: '12px' }}></i>
+                  <p style={{ fontSize: '12px' }}>Premium Feature</p>
+                </div>
+              ) : (
+                <>
+                  {chart.isPie && <div style={{ width: "80px", height: "80px", borderRadius: "50%", border: "16px solid #f1f5f9" }}></div>}
+                  <div style={{ fontSize: chart.isPie ? "14px" : "24px", fontWeight: 700, color: "var(--primary)" }}>
+                    {chart.value === 0 || chart.value === "No Data" ? "Nothing to see" : chart.value}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        ))}
 
         <div className="chart-card" style={{ alignItems: "center", textAlign: "center", justifyContent: "center", minHeight: "200px" }}>
-          {topDistractions.length > 0 ? (
+          {(timeRange === "30d" && !isAdminUnlocked) ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+              <i className="fas fa-lock" style={{ fontSize: '32px', color: 'var(--text-muted)' }}></i>
+              <h3>Premium Insights</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Upgrade to see your top distractions over the last 30 days.</p>
+              <button className="btn-premium">Go Unlimited</button>
+            </div>
+          ) : topDistractions.length > 0 ? (
             <>
               <div className="chart-header" style={{ alignSelf: "flex-start", marginBottom: "24px", width: "100%" }}>
                 <span className="chart-title"><i className="fas fa-chart-pie"></i> Top Distractions</span>
-                <span className="chart-date">Last 7 Days</span>
+                <span className="chart-date">{timeRange === "24h" ? "Today" : `Last ${timeRange === "7d" ? "7" : "30"} Days`}</span>
               </div>
               <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "16px" }}>
                 {topDistractions.map(({ domain, time, perc }) => (

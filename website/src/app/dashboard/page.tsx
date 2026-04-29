@@ -49,11 +49,12 @@ export default function DashboardPage() {
 
   // Refresh key to force re-render of child components after modal saves
   const [refreshKey, setRefreshKey] = useState(0);
+  const [showProfileDetails, setShowProfileDetails] = useState(false);
 
   // Auth gate
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/login");
+      router.push("/");
     }
   }, [user, loading, router]);
 
@@ -117,11 +118,25 @@ export default function DashboardPage() {
   const renderActiveView = () => {
     switch (activeView) {
       case "view-block-sites":
-        return <BlockSites key={`block-${refreshKey}`} isAdminUnlocked={isUnlimited} onOpenModal={openBlockModal} />;
+        return (
+          <BlockSites 
+            key={`block-${refreshKey}`} 
+            isAdminUnlocked={isUnlimited} 
+            showUpgrade={featureFlags.upgradeCard}
+            onOpenModal={openBlockModal} 
+          />
+        );
       case "view-usage-limit":
-        return <UsageLimit key={`usage-${refreshKey}`} onOpenModal={openUsageModal} />;
+        return (
+          <UsageLimit 
+            key={`usage-${refreshKey}`} 
+            isAdminUnlocked={isUnlimited}
+            showUpgrade={featureFlags.upgradeCard}
+            onOpenModal={openUsageModal} 
+          />
+        );
       case "view-insights":
-        return <Insights key={`insights-${refreshKey}`} />;
+        return <Insights key={`insights-${refreshKey}`} isAdminUnlocked={isUnlimited} />;
       case "view-focus-mode":
         return <FocusMode />;
       case "view-settings":
@@ -191,6 +206,9 @@ export default function DashboardPage() {
           isBlockingEnabled={focusData.isBlockingEnabled}
           onBlockingToggle={handleBlockingToggle}
           featureFlags={featureFlags}
+          user={user}
+          userInitial={userInitial}
+          signOutUser={signOutUser}
         />
 
         <div className="main-wrapper">
@@ -210,31 +228,46 @@ export default function DashboardPage() {
           </div> */}
 
           {/* User info + Sign Out */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ position: "relative" }}>
             {featureFlags.profileSection && (
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 600, fontSize: "14px" }}>
+              <div 
+                style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", padding: "6px 12px", borderRadius: "30px", background: showProfileDetails ? "var(--bg-hover)" : "transparent", transition: "all 0.2s" }}
+                onClick={() => setShowProfileDetails(!showProfileDetails)}
+              >
                 {userPhoto ? (
                   <img
                     src={userPhoto}
                     alt={user.displayName || "User"}
-                    style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover" }}
+                    style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover", border: "2px solid var(--border)" }}
                   />
                 ) : (
                   <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "14px", fontWeight: 700 }}>
                     {userInitial}
                   </div>
                 )}
-                {user.displayName || "User"}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+                  <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-main)", display: "flex", alignItems: "center", gap: "6px" }}>
+                    {user.displayName || "User"}
+                    <i className={`fas fa-chevron-${showProfileDetails ? 'up' : 'down'}`} style={{ fontSize: "10px", color: "var(--text-muted)" }}></i>
+                  </span>
+                </div>
               </div>
             )}
-            <button
-              onClick={signOutUser}
-              className="btn btn-outline"
-              style={{ padding: "4px 10px", fontSize: "11px", color: "var(--text-muted)" }}
-              title="Sign out"
-            >
-              <i className="fas fa-sign-out-alt"></i>
-            </button>
+
+            {showProfileDetails && (
+              <div style={{ position: "absolute", top: "100%", right: 0, marginTop: "8px", background: "white", border: "1px solid var(--border)", borderRadius: "12px", boxShadow: "0 10px 25px rgba(0,0,0,0.1)", padding: "16px", minWidth: "200px", zIndex: 100, display: "flex", flexDirection: "column", gap: "4px" }}>
+                <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-main)" }}>{user.displayName || "User"}</span>
+                <span style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "12px" }}>{user.email}</span>
+                <div style={{ height: "1px", background: "var(--border)", marginBottom: "8px" }}></div>
+                <button
+                  onClick={signOutUser}
+                  className="btn btn-outline"
+                  style={{ width: "100%", justifyContent: "center", padding: "8px", fontSize: "13px", fontWeight: 600, color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.2)", background: "rgba(239, 68, 68, 0.05)" }}
+                >
+                  <i className="fas fa-sign-out-alt"></i> Sign Out
+                </button>
+              </div>
+            )}
           </div>
         </header>
 

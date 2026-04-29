@@ -13,6 +13,11 @@ export interface FocusData {
   isWhitelistMode: boolean;
   isBlockingEnabled: boolean;
   usageLimits: { domain: string; limitMinutes: number }[];
+  schedule: {
+    enabled: boolean;
+    intervals: { id: string; start: string; end: string }[];
+    days: string[];
+  };
   settings: Record<string, any>;
   lastSynced?: number;
   [key: string]: any;
@@ -45,6 +50,7 @@ export function FocusDataProvider({ children }: { children: React.ReactNode }) {
     isWhitelistMode: false,
     isBlockingEnabled: true,
     usageLimits: [],
+    schedule: DEFAULTS.schedule,
     settings: {},
   });
   const [loading, setLoading] = useState(true);
@@ -60,7 +66,10 @@ export function FocusDataProvider({ children }: { children: React.ReactNode }) {
     // Load from local storage first for immediate UI
     const local = localStorage.getItem(`${STORAGE_KEY}_${user.uid}`);
     if (local) {
-      try { setDataState(JSON.parse(local)); } catch (e) {}
+      try { 
+        const parsed = JSON.parse(local);
+        setDataState(prev => ({ ...prev, ...parsed })); 
+      } catch (e) {}
     }
 
     // Subscribe to Firestore changes
@@ -69,9 +78,10 @@ export function FocusDataProvider({ children }: { children: React.ReactNode }) {
         const remoteData = docSnap.data().config as FocusData;
         
         setDataState(prev => {
-          if (JSON.stringify(prev) !== JSON.stringify(remoteData)) {
-            localStorage.setItem(`${STORAGE_KEY}_${user.uid}`, JSON.stringify(remoteData));
-            return remoteData;
+          const mergedData = { ...DEFAULTS, ...remoteData };
+          if (JSON.stringify(prev) !== JSON.stringify(mergedData)) {
+            localStorage.setItem(`${STORAGE_KEY}_${user.uid}`, JSON.stringify(mergedData));
+            return mergedData;
           }
           return prev;
         });

@@ -16,7 +16,16 @@ interface SidebarProps {
     passwordProtection: boolean;
     settings: boolean;
     aboutBlocking: boolean;
+    profileSection: boolean;
   };
+  user: {
+    displayName: string | null;
+    email: string | null;
+    photoURL: string | null;
+    photoBase64?: string | null;
+  };
+  userInitial: string;
+  signOutUser: () => void;
 }
 
 export default function Sidebar({
@@ -26,6 +35,9 @@ export default function Sidebar({
   isBlockingEnabled,
   onBlockingToggle,
   featureFlags,
+  user,
+  userInitial,
+  signOutUser,
 }: SidebarProps) {
   const navItems = [
     { id: "view-block-sites", icon: "fa-th-large", label: "Block Sites", visible: featureFlags?.blockSites !== false },
@@ -130,6 +142,107 @@ export default function Sidebar({
           <button className="btn-premium">Go Unlimited</button>
         </div>
       )}
+
+      {featureFlags?.profileSection !== false && (
+        <div className="sidebar-profile">
+          <div className="nav-divider"></div>
+          <div className="profile-container">
+            {user?.photoBase64 || user?.photoURL ? (
+              <img
+                src={user.photoBase64 || user.photoURL || ""}
+                alt={user.displayName || "User"}
+                className="profile-img"
+              />
+            ) : (
+              <div className="profile-initial">{userInitial}</div>
+            )}
+            <div className="profile-info">
+              <span className="profile-name">{user?.displayName || "User"}</span>
+              <span className="profile-email">{user?.email}</span>
+              <button onClick={signOutUser} className="profile-logout">
+                <i className="fas fa-sign-out-alt"></i> Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        .sidebar-profile {
+          padding: 0 12px 20px 12px;
+          margin-top: auto;
+        }
+        .profile-container {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 12px;
+          background: var(--bg-hover);
+          border-radius: 12px;
+          border: 1px solid var(--border);
+        }
+        .profile-img {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 2px solid white;
+        }
+        .profile-initial {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: var(--primary);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-size: 14px;
+          font-weight: 700;
+        }
+        .profile-info {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          overflow: hidden;
+        }
+        .profile-name {
+          font-size: 14px;
+          font-weight: 700;
+          color: var(--text-main);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .profile-email {
+          font-size: 11px;
+          color: var(--text-muted);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .profile-logout {
+          margin-top: 8px;
+          background: none;
+          border: 1px solid var(--border);
+          border-radius: 6px;
+          padding: 4px 8px;
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--text-muted);
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          width: fit-content;
+          transition: all 0.2s;
+        }
+        .profile-logout:hover {
+          background: white;
+          color: var(--danger);
+          border-color: var(--danger);
+        }
+      `}</style>
     </aside>
   );
 }

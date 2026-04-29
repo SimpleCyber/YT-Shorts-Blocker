@@ -904,7 +904,24 @@ async function isBlockedUrl() {
   });
 
   const siteList = allBlockedSites.filter(site => site.trim().length > 0);
-  let isBlocked = siteList.some(site => url.includes(site));
+  let isBlocked = false;
+  let blockReason = '';
+  let blockCategory = '';
+
+  for (const site of siteList) {
+    if (url.includes(site)) {
+      isBlocked = true;
+      blockReason = 'site';
+      // Try to find if it belongs to a category
+      for (const [cat, list] of Object.entries(CATEGORY_LISTS)) {
+        if (list.includes(site)) {
+          blockCategory = cat;
+          break;
+        }
+      }
+      break;
+    }
+  }
 
   // Check Usage Limits
   if (!isBlocked && settings.usageLimits && settings.usageLimits.length > 0) {
@@ -914,7 +931,10 @@ async function isBlockedUrl() {
     const limitObj = settings.usageLimits.find(u => url.includes(u.domain));
     if (limitObj && limitObj.limitMinutes > 0) {
       const minsUsed = Math.floor((usageData[limitObj.domain] || 0) / 60);
-      if (minsUsed >= limitObj.limitMinutes) isBlocked = true;
+      if (minsUsed >= limitObj.limitMinutes) {
+        isBlocked = true;
+        blockReason = 'usage_limit';
+      }
     }
   }
   
@@ -927,10 +947,15 @@ async function isBlockedUrl() {
 
   const validKeywords = keywords.filter(kw => kw.trim().length > 0);
   
-  if (!isBlocked && !settings.isWhitelistMode && validKeywords.length > 0) {
     const normalizedUrl = url.toLowerCase();
     // Check keywords in URL
-    isBlocked = validKeywords.some(kw => normalizedUrl.includes(kw.toLowerCase()));
+    isBlocked = validKeywords.some(kw => {
+      if (normalizedUrl.includes(kw.toLowerCase())) {
+        blockReason = 'keyword';
+        return true;
+      }
+      return false;
+    });
     
     if (!isBlocked) {
       // Check keywords in Metadata
@@ -942,7 +967,13 @@ async function isBlockedUrl() {
         document.querySelector('meta[property="og:description"]')?.content || ''
       ].join(' ').toLowerCase();
       
-      isBlocked = validKeywords.some(kw => pageText.includes(kw.toLowerCase()));
+      isBlocked = validKeywords.some(kw => {
+        if (pageText.includes(kw.toLowerCase())) {
+          blockReason = 'keyword';
+          return true;
+        }
+        return false;
+      });
     }
   }
   
@@ -956,24 +987,49 @@ async function isBlockedUrl() {
       url.includes('localhost') ||
       url.includes('127.0.0.1') ||
       url.includes('focus-shield.vercel.app')
-    ) return false;
-    return !isBlocked;
+    ) return { blocked: false };
+    
+    if (!isBlocked) {
+      return { blocked: true, reason: 'whitelist' };
+    }
+    return { blocked: false };
   } else {
     // Normal blocklist mode
-    return isBlocked;
+    if (isBlocked) {
+      return { blocked: true, reason: blockReason, category: blockCategory };
+    }
+    return { blocked: false };
   }
+}
+
+// Helper to record blocked attempts
+async function recordBlockedAttempt(reason, category) {
+  const d = new Date();
+  const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const statsKey = `stats_${dateStr}`;
+  
+  const data = await new Promise(r => chrome.storage.local.get([statsKey], r));
+  const stats = data[statsKey] || { blockedAttempts: 0, blockedCategories: {} };
+  
+  stats.blockedAttempts = (stats.blockedAttempts || 0) + 1;
+  if (category) {
+    stats.blockedCategories[category] = (stats.blockedCategories[category] || 0) + 1;
+  }
+  
+  await chrome.storage.local.set({ [statsKey]: stats });
 }
 
 // Main function to manage viewing and apply timer
 async function manageViewing() {
-  const shouldBlock = await isBlockedUrl();
+  const result = await isBlockedUrl();
   const existingBlocker = document.querySelector(".blocker-container");
 
-  if (shouldBlock) {
+  if (result.blocked) {
     if (!existingBlocker) {
       // Pause all videos immediately
       document.querySelectorAll("video").forEach(v => v.pause());
       createSandglassTimer();
+      recordBlockedAttempt(result.reason, result.category);
     }
   } else if (existingBlocker) {
     existingBlocker.remove();

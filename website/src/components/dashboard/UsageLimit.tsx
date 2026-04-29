@@ -2,13 +2,20 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useFocusData } from "../../lib/FocusDataContext";
+import { FREE_LIMIT } from "../../lib/extensionBridge";
 
 interface UsageLimitItem {
   domain: string;
   limitMinutes: number;
 }
 
-export default function UsageLimit({ onOpenModal }: { onOpenModal: () => void }) {
+interface UsageLimitProps {
+  isAdminUnlocked: boolean;
+  showUpgrade: boolean;
+  onOpenModal: () => void;
+}
+
+export default function UsageLimit({ isAdminUnlocked, showUpgrade, onOpenModal }: UsageLimitProps) {
   const { data, updateData } = useFocusData();
   const { usageLimits } = data;
   const [dayData, setDayData] = useState<Record<string, number>>({});
@@ -48,6 +55,8 @@ export default function UsageLimit({ onOpenModal }: { onOpenModal: () => void })
   const minuteSteps = [5, 10, 20, 25, 30, 35, 40, 45, 50, 55, 60];
   const hourSteps: number[] = [];
   for (let h = 1.5; h <= 24; h += 0.5) hourSteps.push(h * 60);
+
+  const remaining = FREE_LIMIT - usageLimits.length;
 
   return (
     <section id="view-usage-limit" className="view-section active">
@@ -146,6 +155,18 @@ export default function UsageLimit({ onOpenModal }: { onOpenModal: () => void })
           })}
         </div>
       </div>
+
+      {(!isAdminUnlocked && showUpgrade) && (
+        <div className="banner-upgrade premium-element">
+          <div className="banner-text">
+            <strong>{remaining > 0 ? remaining : 0} place{remaining === 1 ? "" : "s"} left</strong> to set usage limits.{" "}
+            <span style={{ color: "var(--text-muted)" }}>
+              Click here to upgrade and enjoy unlimited site limits.
+            </span>
+          </div>
+          <button className="btn-premium" style={{ width: "auto" }}>Go Unlimited</button>
+        </div>
+      )}
     </section>
   );
 }
