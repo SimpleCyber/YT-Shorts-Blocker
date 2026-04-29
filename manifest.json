@@ -33,7 +33,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["options.html", "privacy.html", "privacy.css", "options.js", "landing.css", "index.html"],
+      "resources": ["options.html", "options.js", "landing.css", "index.html", "hero-dashboard.png"],
       "matches": ["<all_urls>"]
     }
   ]

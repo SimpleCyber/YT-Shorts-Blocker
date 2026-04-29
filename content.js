@@ -9,11 +9,25 @@ const DEFAULTS = {
 };
 
 const CATEGORY_LISTS = {
-  social: ['facebook.com', 'instagram.com', 'x.com', 'tiktok.com', 'snapchat.com', 'reddit.com', 'pinterest.com'],
-  news: ['cnn.com', 'foxnews.com', 'nytimes.com', 'bbc.com', 'buzzfeed.com'],
-  sports: ['espn.com', 'nba.com', 'nfl.com', 'skysports.com'],
-  shopping: ['amazon.com', 'ebay.com', 'walmart.com', 'target.com', 'aliexpress.com']
+  social: ['facebook.com', 'instagram.com', 'x.com', 'twitter.com', 'tiktok.com', 'snapchat.com', 'reddit.com', 'pinterest.com', 'linkedin.com'],
+  news: ['cnn.com', 'foxnews.com', 'nytimes.com', 'bbc.com', 'buzzfeed.com', 'dailymail.co.uk', 'reuters.com'],
+  sports: ['espn.com', 'nba.com', 'nfl.com', 'skysports.com', 'bleacherreport.com', 'cbssports.com'],
+  shopping: ['amazon.com', 'ebay.com', 'walmart.com', 'target.com', 'aliexpress.com', 'bestbuy.com', 'etsy.com'],
+  adult: [
+    'pornhub.com', 'pornhub.org', 'xvideos.com', 'xnxx.com', 'redtube.com', 
+    'youporn.com', 'tube8.com', 'spankbang.com', 'xhamster.com', 'xhamster2.com', 
+    'brazzers.com', 'naughtyamerica.com', 'chaturbate.com', 'onlyfans.com',
+    'hentaihaven.org', 'rule34.xxx', 'sex.com', 'xxxvideo.com', 'hqporner.com'
+  ]
 };
+
+const ADULT_KEYWORDS = [
+  'porn', 'pron', 'sexvideo', 'sexvideos', 'xxx', 'adult', 'sex', 
+  'pornhub', 'xvideos', 'xnxx', 'redtube', 'youporn', 'tube8', 
+  'spankbang', 'xhamster', 'brazzers', 'naughtyamerica',
+  'p0rn', 'pr0n', 'xxxvideo', 'sex-video', 'sex-videos',
+  'free-sex-videos', 'bestpornsite', 'nsfw', 'onlyfans'
+];
 
 async function getSettings() {
   return new Promise((resolve) => {
@@ -892,16 +906,31 @@ async function isBlockedUrl() {
   const siteList = allBlockedSites.filter(site => site.trim().length > 0);
   let isBlocked = siteList.some(site => url.includes(site));
   
-  if (!isBlocked && !settings.isWhitelistMode) {
-    const keywords = (settings.blockedKeywords || []).filter(kw => kw.trim().length > 0);
-    if (keywords.length > 0) {
+  const keywords = [...(settings.blockedKeywords || [])];
+  
+  // If 'adult' category is active, add the hardcoded adult keywords as well
+  if (activeCats.includes('adult')) {
+    keywords.push(...ADULT_KEYWORDS);
+  }
+
+  const validKeywords = keywords.filter(kw => kw.trim().length > 0);
+  
+  if (!isBlocked && !settings.isWhitelistMode && validKeywords.length > 0) {
+    const normalizedUrl = url.toLowerCase();
+    // Check keywords in URL
+    isBlocked = validKeywords.some(kw => normalizedUrl.includes(kw.toLowerCase()));
+    
+    if (!isBlocked) {
+      // Check keywords in Metadata
       const pageText = [
         document.title,
         document.querySelector('meta[name="description"]')?.content || '',
-        document.querySelector('meta[name="keywords"]')?.content || ''
+        document.querySelector('meta[name="keywords"]')?.content || '',
+        document.querySelector('meta[property="og:title"]')?.content || '',
+        document.querySelector('meta[property="og:description"]')?.content || ''
       ].join(' ').toLowerCase();
       
-      isBlocked = keywords.some(kw => pageText.includes(kw.toLowerCase()));
+      isBlocked = validKeywords.some(kw => pageText.includes(kw.toLowerCase()));
     }
   }
   
@@ -923,21 +952,27 @@ async function manageViewing() {
     const timer = createSandglassTimer();
     const settings = await getSettings();
     const durationMs = settings.duration * 1000;
+  const existingBlocker = document.querySelector(".blocker-container");
 
-    // Wait for the configured duration
-    await new Promise((resolve) => setTimeout(resolve, durationMs));
-
-    // Remove timer overlay
-    timer.removeTimer();
-
-    // Set timer to appear again after 1 minute of watching (could also be configurable)
-    setTimeout(() => {
-      manageViewing();
-    }, 60000);
+  if (shouldBlock) {
+    if (!existingBlocker) {
+      // Pause all videos immediately
+      document.querySelectorAll("video").forEach(v => v.pause());
+      createSandglassTimer();
+    }
+  } else if (existingBlocker) {
+    existingBlocker.remove();
   }
 }
 
-// Monitor URL changes for SPAs
+// Initial check
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', manageViewing);
+} else {
+  manageViewing();
+}
+
+// Observe URL changes (for SPAs)
 let lastUrl = location.href;
 new MutationObserver(() => {
   const url = location.href;
@@ -949,3 +984,5 @@ new MutationObserver(() => {
 
 // Initial check
 manageViewing();
+
+}

@@ -9,8 +9,14 @@ const DEFAULTS = {
     usageLimits: [] // Array of {domain: string, limitMinutes: number}
 };
 
-const ADULT_KEYWORDS = ['porn', 'nsfw', 'xvideos', 'xnxx', 'sex', 'xxx', 'adult', 'onlyfans', 'poker', 'casino', 'gambling'];
-const FREE_LIMIT = 3;
+const ADULT_KEYWORDS = [
+    'porn', 'pron', 'sexvideo', 'sexvideos', 'xxx', 'adult', 'sex', 
+    'pornhub', 'xvideos', 'xnxx', 'redtube', 'youporn', 'tube8', 
+    'spankbang', 'xhamster', 'brazzers', 'naughtyamerica',
+    'p0rn', 'pr0n', 'xxxvideo', 'sex-video', 'sex-videos',
+    'free-sex-videos', 'bestpornsite', 'nsfw', 'onlyfans'
+];
+const FREE_LIMIT = 5; // Increased limit slightly for better user experience
 
 let isAdminUnlocked = false;
 
@@ -167,12 +173,15 @@ function renderBlockList() {
 
         // Keywords
         if (blockedKeywords.length > 0) {
-            const isAdult = ADULT_KEYWORDS.every(kw => blockedKeywords.includes(kw));
+            // Check if it contains the core adult keywords to label it as "Adult (Keywords)"
+            const adultKeywordsInList = blockedKeywords.filter(kw => ADULT_KEYWORDS.includes(kw));
+            const isAdultCategory = adultKeywordsInList.length >= 5; // If 5 or more adult keywords are present
+            
             html += `
             <div class="table-row">
                 <div class="item-info">
                     <div class="item-icon"><i class="fas fa-key" style="color: #f59e0b"></i></div>
-                    <div class="item-details"><span class="item-domain">${isAdult ? 'Adult (Keywords)' : 'Custom Keywords'}</span><span class="item-type">Keyword List</span></div>
+                    <div class="item-details"><span class="item-domain">${isAdultCategory ? 'Adult (Keywords)' : 'Custom Keywords'}</span><span class="item-type">${blockedKeywords.length} terms</span></div>
                 </div>
                 <button class="delete-btn block-kw-del"><i class="fas fa-trash"></i></button>
             </div>`;

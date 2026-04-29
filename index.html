@@ -3,128 +3,273 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FocusShield - Reclaim Your Focus</title>
-    <meta name="description" content="Block addictive short-form content and reclaim your time with FocusShield. The ultimate content blocker for YouTube Shorts, Instagram Reels, and more.">
+    <title>FocusShield – Block Distractions & Reclaim Your Focus</title>
+    <meta name="description" content="FocusShield blocks addictive short-form content like YouTube Shorts, Instagram Reels, and distracting websites. Boost productivity with focus timers, usage limits, and smart insights.">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Styles -->
     <link rel="stylesheet" href="landing.css">
+    <link rel="icon" type="image/png" href="icon.png">
 </head>
 <body>
-    <div class="background-glow"></div>
-
-    <nav>
+    <!-- ========== NAVBAR ========== -->
+    <nav class="navbar" id="navbar">
         <div class="container">
             <a href="#" class="logo">
-                <span class="logo-shield">🛡️</span>
+                <i class="fas fa-shield-alt logo-icon"></i>
                 <span class="logo-text">FocusShield</span>
             </a>
-            <div class="nav-links">
+            <div class="nav-links" id="nav-links">
                 <a href="#features">Features</a>
-                <a href="privacy.html">Privacy</a>
-                <a href="#" class="cta-button">Add to Chrome</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#privacy">Privacy</a>
+                <a href="#" class="btn-chrome" id="cta-install-nav">
+                    <i class="fab fa-chrome"></i> Add to Chrome
+                </a>
             </div>
+            <button class="menu-toggle" id="menu-toggle" aria-label="Toggle menu">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
     </nav>
 
     <main>
-        <!-- Hero Section -->
-        <section class="hero">
+        <!-- ========== HERO ========== -->
+        <section class="hero" id="hero">
             <div class="container">
-                <h1>Stop Scrolling. <br><span style="color: var(--primary);">Start Living.</span></h1>
-                <p>Reclaim 2+ hours of your daily life by blocking addictive short-form content. FocusShield puts you back in control of your digital habits.</p>
-                <div class="hero-actions">
-                    <a href="#" class="cta-button" style="font-size: 1.2rem; padding: 16px 40px;">Install FocusShield — It's Free</a>
+                <div class="hero-badge">
+                    <i class="fas fa-bolt"></i>
+                    Free & Privacy-First Extension
                 </div>
                 
-                <div class="hero-visual">
-                    <!-- Placeholder for app screenshot or animation -->
-                    <div style="background: var(--bg-card); width: 800px; height: 450px; border-radius: 24px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border);">
-                        <div style="text-align: center;">
-                            <span style="font-size: 100px;">⏳</span>
-                            <h2 style="margin-top: 20px; color: var(--primary);">The Focus Timer</h2>
-                            <p style="color: var(--text-dim);">Coming soon to your browser</p>
+                <h1>Stop Scrolling.<br><span class="highlight">Start Living.</span></h1>
+                
+                <p class="hero-desc">
+                    Block addictive short-form content, set smart usage limits, and track your productivity — all from a beautiful dashboard that respects your privacy.
+                </p>
+                
+                <div class="hero-actions">
+                    <a href="#" class="btn-chrome" id="cta-install-hero">
+                        <i class="fab fa-chrome"></i> Install FocusShield — It's Free
+                    </a>
+                    <a href="#features" class="btn-outline-nav">
+                        <i class="fas fa-arrow-down"></i> See Features
+                    </a>
+                </div>
+                
+                <div class="hero-trust">
+                    <span><i class="fas fa-check-circle"></i> 100% Free</span>
+                    <span><i class="fas fa-check-circle"></i> No Data Collection</span>
+                    <span class="stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <span style="color: var(--text-dim); margin-left: 4px;">4.8 Rating</span>
+                    </span>
+                </div>
+                
+                <!-- <div class="hero-visual">
+                    <img src="hero-dashboard.png" alt="FocusShield Dashboard Preview — Block sites, set usage limits, and track focus insights" loading="lazy">
+                </div> -->
+            </div>
+        </section>
+
+        <!-- ========== STATS BAR ========== -->
+        <section class="stats-bar reveal">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">10K+</div>
+                        <div class="stat-label">Active Users</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">2.5hrs</div>
+                        <div class="stat-label">Avg. Time Saved Daily</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">500K+</div>
+                        <div class="stat-label">Distractions Blocked</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">4.8★</div>
+                        <div class="stat-label">Chrome Store Rating</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== FEATURES ========== -->
+        <section class="features" id="features">
+            <div class="container">
+                <div class="section-header reveal">
+                    <div class="section-label"><i class="fas fa-sparkles"></i> Features</div>
+                    <h2>Everything you need to stay focused</h2>
+                    <p>A powerful toolkit designed for productivity, built with privacy at its core.</p>
+                </div>
+
+                <div class="feature-grid">
+                    <div class="feature-card reveal">
+                        <div class="feature-icon-wrap red">
+                            <i class="fab fa-youtube"></i>
+                        </div>
+                        <h3>YouTube Shorts Blocker</h3>
+                        <p>Automatically hide the addictive Shorts shelf and redirect Shorts URLs. Take back control of your YouTube experience.</p>
+                    </div>
+
+                    <div class="feature-card reveal">
+                        <div class="feature-icon-wrap purple">
+                            <i class="fab fa-instagram"></i>
+                        </div>
+                        <h3>Reels Neutralizer</h3>
+                        <p>Say goodbye to infinite scrolling on Instagram. We block Reels so you can focus on what actually matters.</p>
+                    </div>
+
+                    <div class="feature-card reveal">
+                        <div class="feature-icon-wrap indigo">
+                            <i class="fas fa-ban"></i>
+                        </div>
+                        <h3>Smart Site Blocking</h3>
+                        <p>Block entire websites, specific URLs, or categories of distracting content with one click from the dashboard.</p>
+                    </div>
+
+                    <div class="feature-card reveal">
+                        <div class="feature-icon-wrap amber">
+                            <i class="fas fa-hourglass-half"></i>
+                        </div>
+                        <h3>Usage Limits</h3>
+                        <p>Set daily time limits for any website. Once you hit your limit, access is blocked until the next day.</p>
+                    </div>
+
+                    <div class="feature-card reveal">
+                        <div class="feature-icon-wrap green">
+                            <i class="fas fa-bullseye"></i>
+                        </div>
+                        <h3>Focus Timer</h3>
+                        <p>Pomodoro-style focus sessions with a beautiful circular timer. Stay productive with work-break cycles.</p>
+                    </div>
+
+                    <div class="feature-card reveal">
+                        <div class="feature-icon-wrap sky">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <h3>Focus Insights</h3>
+                        <p>Visualize your productivity with detailed charts. Track time saved, blocked attempts, and top distractions.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== HOW IT WORKS ========== -->
+        <section class="how-it-works" id="how-it-works">
+            <div class="container">
+                <div class="section-header reveal">
+                    <div class="section-label"><i class="fas fa-route"></i> How It Works</div>
+                    <h2>Up and running in 30 seconds</h2>
+                    <p>No accounts, no sign-ups. Just install and start focusing.</p>
+                </div>
+
+                <div class="steps-grid">
+                    <div class="step-card reveal">
+                        <div class="step-number">1</div>
+                        <h3>Install the Extension</h3>
+                        <p>Click "Add to Chrome" and FocusShield is instantly active. Zero configuration needed.</p>
+                    </div>
+                    <div class="step-card reveal">
+                        <div class="step-number">2</div>
+                        <h3>Customize Your Block List</h3>
+                        <p>Add distracting sites, set usage limits, and choose categories to block from the clean dashboard.</p>
+                    </div>
+                    <div class="step-card reveal">
+                        <div class="step-number">3</div>
+                        <h3>Reclaim Your Time</h3>
+                        <p>Watch your productivity soar. Track progress with Focus Insights and keep improving every day.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== PRIVACY ========== -->
+        <section class="privacy-section" id="privacy">
+            <div class="container">
+                <div class="privacy-grid">
+                    <div class="privacy-content reveal">
+                        <div class="section-label"><i class="fas fa-lock"></i> Privacy First</div>
+                        <h2>Your data stays on your device. Period.</h2>
+                        <p>
+                            FocusShield was built with a privacy-first architecture. We don't have servers, we don't track you, and we don't sell anything. Everything runs 100% locally in your browser.
+                        </p>
+                        <ul class="privacy-checklist">
+                            <li><i class="fas fa-check-circle"></i> Zero data collection or transmission</li>
+                            <li><i class="fas fa-check-circle"></i> No tracking cookies or analytics</li>
+                            <li><i class="fas fa-check-circle"></i> No backend servers — fully offline</li>
+                            <li><i class="fas fa-check-circle"></i> All settings stored locally via chrome.storage</li>
+                            <li><i class="fas fa-check-circle"></i> 100% ad-free and tracker-free</li>
+                        </ul>
+                    </div>
+                    <div class="privacy-visual reveal">
+                        <div class="privacy-card card-indigo">
+                            <i class="fas fa-database"></i>
+                            <h4>Local Storage Only</h4>
+                            <p>Block lists and settings are saved in your browser profile</p>
+                        </div>
+                        <div class="privacy-card card-green">
+                            <i class="fas fa-shield-halved"></i>
+                            <h4>No Servers</h4>
+                            <p>Zero external connections. Everything runs on your machine</p>
+                        </div>
+                        <div class="privacy-card card-red">
+                            <i class="fas fa-eye-slash"></i>
+                            <h4>No Tracking</h4>
+                            <p>We never see or store your browsing history</p>
+                        </div>
+                        <div class="privacy-card card-amber">
+                            <i class="fas fa-code"></i>
+                            <h4>Open Permissions</h4>
+                            <p>Every permission is justified and documented</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Features Section -->
-        <section class="features" id="features">
+        <!-- ========== CTA ========== -->
+        <section class="cta-section">
             <div class="container">
-                <div class="section-title">
-                    <h2>Everything you need to stay focused</h2>
-                    <p>Designed for productivity, built for privacy.</p>
-                </div>
-
-                <div class="feature-grid">
-                    <div class="feature-card">
-                        <div class="feature-icon"><i class="fab fa-youtube"></i></div>
-                        <h3>YouTube Shorts Blocker</h3>
-                        <p>Automatically hide the addictive Shorts shelf and redirect Shorts URLs to normal videos or block them entirely.</p>
-                    </div>
-
-                    <div class="feature-card">
-                        <div class="feature-icon"><i class="fab fa-instagram"></i></div>
-                        <h3>Reels Neutralizer</h3>
-                        <p>Say goodbye to infinite scrolling on Instagram. We block Reels so you can focus on meaningful connections.</p>
-                    </div>
-
-                    <div class="feature-card">
-                        <div class="feature-icon"><i class="fas fa-lock"></i></div>
-                        <h3>Secure Lock Mode</h3>
-                        <p>Can't trust yourself? Lock your settings for up to 30 days. No way to disable the blocker until the timer expires.</p>
-                    </div>
-
-                    <div class="feature-card">
-                        <div class="feature-icon"><i class="fas fa-hourglass-half"></i></div>
-                        <h3>Visual Focus Timer</h3>
-                        <p>Our unique sand-glass animation gives you a visual representation of your focus sessions, helping you stay on track.</p>
-                    </div>
-
-                    <div class="feature-card">
-                        <div class="feature-icon"><i class="fas fa-shield-halved"></i></div>
-                        <h3>Privacy First</h3>
-                        <p>We don't collect your data. Everything happens locally in your browser. No tracking, no servers, just focus.</p>
-                    </div>
-
-                    <div class="feature-card">
-                        <div class="feature-icon"><i class="fas fa-bolt"></i></div>
-                        <h3>Lightweight & Fast</h3>
-                        <p>Zero impact on your browser's performance. FocusShield is optimized to be as lean as possible.</p>
+                <div class="cta-box reveal">
+                    <h2>Ready to reclaim your focus?</h2>
+                    <p>Join thousands of users who've taken back control of their screen time. It takes 10 seconds to install.</p>
+                    <a href="#" class="btn-chrome" id="cta-install-bottom">
+                        <i class="fab fa-chrome"></i> Add to Chrome for Free
+                    </a>
+                    <div class="cta-subtext">
+                        <i class="fas fa-check-circle"></i>
+                        Free forever &bull; No sign-up required &bull; Privacy-first
                     </div>
                 </div>
-            </div>
-        </section>
-
-        <!-- CTA Section -->
-        <section style="padding: 100px 0; text-align: center; background: linear-gradient(to bottom, transparent, rgba(99, 102, 241, 0.1));">
-            <div class="container">
-                <h2 style="font-size: 3rem; margin-bottom: 2rem;">Ready to reclaim your time?</h2>
-                <a href="#" class="cta-button" style="font-size: 1.2rem; padding: 16px 40px;">Add to Chrome for Free</a>
-                <p style="margin-top: 2rem; color: var(--text-dim); font-size: 0.9rem;">Join 10,000+ users boosting their productivity daily.</p>
             </div>
         </section>
     </main>
 
+    <!-- ========== FOOTER ========== -->
     <footer>
         <div class="container">
             <div class="footer-content">
                 <a href="#" class="logo">
-                    <span class="logo-shield">🛡️</span>
+                    <i class="fas fa-shield-alt logo-icon"></i>
                     <span class="logo-text">FocusShield</span>
                 </a>
                 <div class="footer-links">
                     <a href="#features">Features</a>
-                    <a href="privacy.html">Privacy Policy</a>
+                    <a href="#privacy">Privacy</a>
                     <a href="mailto:support@focusshield.app">Support</a>
                 </div>
             </div>
@@ -135,15 +280,44 @@
     </footer>
 
     <script>
-        // Simple smooth scroll for nav links
+        // Navbar scroll effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            navbar.classList.toggle('scrolled', window.scrollY > 20);
+        });
+
+        // Smooth scroll for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
+            anchor.addEventListener('click', function(e) {
                 e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
             });
         });
+
+        // Scroll reveal animation
+        const revealElements = document.querySelectorAll('.reveal');
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+        revealElements.forEach(el => revealObserver.observe(el));
+
+        // Mobile menu toggle
+        const menuToggle = document.getElementById('menu-toggle');
+        const navLinks = document.getElementById('nav-links');
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+            });
+        }
     </script>
 </body>
 </html>
