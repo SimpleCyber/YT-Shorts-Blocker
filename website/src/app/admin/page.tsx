@@ -1,13 +1,19 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../../lib/AuthContext";
 import { useRouter } from "next/navigation";
+import AdminSidebar from "../../components/admin/AdminSidebar";
+import AdminOverview from "../../components/admin/AdminOverview";
+import UserTable from "../../components/admin/UserTable";
+import "./admin.css";
 
 export default function AdminPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, signOutUser } = useAuth();
   const router = useRouter();
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+  
+  const [activeView, setActiveView] = useState("overview");
 
   useEffect(() => {
     if (!loading) {
@@ -19,84 +25,92 @@ export default function AdminPage() {
     }
   }, [user, loading, router, adminEmail]);
 
-  if (loading) {
+  if (loading || !user || user.email !== adminEmail) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0f172a]">
-        <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#f8fafc" }}>
+        <div style={{ width: "32px", height: "32px", border: "4px solid #e2e8f0", borderTopColor: "#4f46e5", borderRadius: "50%", animation: "spin 0.8s linear infinite" }}></div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
-  if (!user || user.email !== adminEmail) {
-    return null;
-  }
+  const renderActiveView = () => {
+    switch (activeView) {
+      case "overview":
+        return <AdminOverview />;
+      case "users":
+        return <UserTable />;
+      default:
+        return (
+          <div className="view-section active">
+            <h1 className="page-title">{activeView.charAt(0).toUpperCase() + activeView.slice(1)}</h1>
+            <div className="card" style={{ textAlign: "center", padding: "60px 20px" }}>
+              <i className="fas fa-lock" style={{ fontSize: "48px", color: "var(--primary)", marginBottom: "20px" }}></i>
+              <h3>Section Under Construction</h3>
+              <p style={{ color: "var(--text-muted)", marginTop: "12px" }}>This admin feature is currently being developed.</p>
+            </div>
+          </div>
+        );
+    }
+  };
+
+  const userInitial = user.displayName ? user.displayName.charAt(0).toUpperCase() : "A";
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-white font-['Outfit'] p-8">
-      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      
-      <div className="max-w-6xl mx-auto">
-        <header className="flex justify-between items-center mb-12">
-          <div>
-            <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400">
-              Admin Control Center
-            </h1>
-            <p className="text-slate-400 mt-2">Welcome back, {user.displayName || "Admin"}</p>
-          </div>
-          <button 
-            onClick={() => router.push("/dashboard")}
-            className="px-6 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all"
-          >
-            Back to Dashboard
-          </button>
-        </header>
+    <>
+      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Stats Cards */}
-          <div className="bg-slate-800/50 border border-slate-700 p-6 rounded-2xl backdrop-blur-xl">
-            <h3 className="text-slate-400 text-sm font-medium mb-1">Total Users</h3>
-            <p className="text-3xl font-bold">1,284</p>
-            <div className="mt-4 flex items-center text-emerald-400 text-sm">
-              <i className="fas fa-arrow-up mr-1"></i>
-              <span>12% from last month</span>
+      <div style={{ display: "flex", flexDirection: "row", height: "100vh", width: "100%", overflow: "hidden" }}>
+        <AdminSidebar 
+          activeView={activeView} 
+          onNavigate={setActiveView} 
+        />
+
+        <div className="main-wrapper">
+          <header className="header">
+            <div style={{ marginRight: "auto", display: "flex", alignItems: "center", gap: "12px" }}>
+               <button 
+                onClick={() => router.push("/dashboard")}
+                className="btn btn-outline"
+                style={{ padding: "6px 12px", fontSize: "12px" }}
+              >
+                <i className="fas fa-arrow-left"></i> User Dashboard
+              </button>
             </div>
-          </div>
 
-          <div className="bg-slate-800/50 border border-slate-700 p-6 rounded-2xl backdrop-blur-xl">
-            <h3 className="text-slate-400 text-sm font-medium mb-1">Active Blocks</h3>
-            <p className="text-3xl font-bold">45,902</p>
-            <div className="mt-4 flex items-center text-emerald-400 text-sm">
-              <i className="fas fa-arrow-up mr-1"></i>
-              <span>8% from last month</span>
+            {/* Admin Profile */}
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 600, fontSize: "14px" }}>
+                {user.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt={user.displayName || "Admin"}
+                    style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover" }}
+                  />
+                ) : (
+                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "14px", fontWeight: 700 }}>
+                    {userInitial}
+                  </div>
+                )}
+                {user.displayName || "Admin"}
+              </div>
+              <button
+                onClick={signOutUser}
+                className="btn btn-outline"
+                style={{ padding: "4px 10px", fontSize: "11px", color: "var(--text-muted)" }}
+                title="Sign out"
+              >
+                <i className="fas fa-sign-out-alt"></i>
+              </button>
             </div>
-          </div>
+          </header>
 
-          <div className="bg-slate-800/50 border border-slate-700 p-6 rounded-2xl backdrop-blur-xl">
-            <h3 className="text-slate-400 text-sm font-medium mb-1">Revenue</h3>
-            <p className="text-3xl font-bold">$12,450</p>
-            <div className="mt-4 flex items-center text-indigo-400 text-sm">
-              <i className="fas fa-chart-line mr-1"></i>
-              <span>Stable</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-12 bg-slate-800/50 border border-slate-700 rounded-2xl overflow-hidden backdrop-blur-xl">
-          <div className="p-6 border-b border-slate-700">
-            <h2 className="text-xl font-semibold">User Management</h2>
-          </div>
-          <div className="p-8 text-center text-slate-500">
-            <i className="fas fa-lock text-4xl mb-4 opacity-20"></i>
-            <p>Admin functionality is currently locked. Additional instructions needed.</p>
-          </div>
+          <main className="content-area">
+            {renderActiveView()}
+          </main>
         </div>
       </div>
-
-      <style jsx global>{`
-        body {
-          background-color: #0f172a;
-        }
-      `}</style>
-    </div>
+    </>
   );
 }
