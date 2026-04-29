@@ -116,7 +116,7 @@ export default function Sidebar({
               className="nav-item"
               style={{ cursor: "default", justifyContent: "space-between" }}
             >
-              <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                 <i className="fas fa-ban"></i> 
                 <span>Blocking</span>
                 <div className="tooltip-container">

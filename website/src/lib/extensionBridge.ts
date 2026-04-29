@@ -26,7 +26,9 @@ export function getData(keys: string[] | null = null): Promise<Record<string, un
       if (event.source !== window) return;
       if (event.data && event.data.type === "FOCUS_SHIELD_SYNC_RESPONSE" && event.data.actionType === actionType) {
         window.removeEventListener("message", listener);
-        if (event.data.response) {
+        if (event.data.error) {
+          reject(new Error(event.data.error));
+        } else if (event.data.response) {
           resolve(event.data.response);
         } else {
           reject(new Error("No response from extension"));
@@ -41,11 +43,11 @@ export function getData(keys: string[] | null = null): Promise<Record<string, un
       payload: { action: "getData", keys } 
     }, "*");
     
-    // Timeout after 1 second
+    // Timeout after 5 seconds (increased from 1s for better reliability in dev)
     setTimeout(() => {
       window.removeEventListener("message", listener);
       reject(new Error("Extension not available or timed out"));
-    }, 1000);
+    }, 5000);
   });
 }
 
@@ -66,7 +68,9 @@ export function setData(data: Record<string, unknown>): Promise<{ success: boole
       if (event.source !== window) return;
       if (event.data && event.data.type === "FOCUS_SHIELD_SYNC_RESPONSE" && event.data.actionType === actionType) {
         window.removeEventListener("message", listener);
-        if (event.data.response) {
+        if (event.data.error) {
+          reject(new Error(event.data.error));
+        } else if (event.data.response) {
           resolve(event.data.response as { success: boolean });
         } else {
           reject(new Error("No response from extension"));
@@ -81,11 +85,11 @@ export function setData(data: Record<string, unknown>): Promise<{ success: boole
       payload: { action: "setData", data } 
     }, "*");
     
-    // Timeout after 1 second
+    // Timeout after 5 seconds
     setTimeout(() => {
       window.removeEventListener("message", listener);
       reject(new Error("Extension not available or timed out"));
-    }, 1000);
+    }, 5000);
   });
 }
 

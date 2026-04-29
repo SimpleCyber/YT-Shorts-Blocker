@@ -1000,7 +1000,7 @@ async function isBlockedUrl() {
     }
     return { blocked: false };
   }
-}
+
 
 // Helper to record blocked attempts
 async function recordBlockedAttempt(reason, category) {
@@ -1066,6 +1066,17 @@ window.addEventListener("message", (event) => {
     // Forward the message to the background script
     try {
       chrome.runtime.sendMessage(event.data.payload, (response) => {
+        // Check for runtime errors (like extension context invalidated)
+        if (chrome.runtime.lastError) {
+          console.error("FocusShield: Bridge Error", chrome.runtime.lastError.message);
+          window.postMessage({ 
+            type: "FOCUS_SHIELD_SYNC_RESPONSE", 
+            actionType: event.data.actionType,
+            error: chrome.runtime.lastError.message 
+          }, "*");
+          return;
+        }
+
         // Send response back to the Next.js app
         window.postMessage({ 
           type: "FOCUS_SHIELD_SYNC_RESPONSE", 
@@ -1075,6 +1086,12 @@ window.addEventListener("message", (event) => {
       });
     } catch (e) {
       console.error("FocusShield: Error sending message to background", e);
+      // Propagate error back to website so it doesn't just time out
+      window.postMessage({ 
+        type: "FOCUS_SHIELD_SYNC_RESPONSE", 
+        actionType: event.data.actionType,
+        error: e.message || "Failed to communicate with extension"
+      }, "*");
     }
   }
 });

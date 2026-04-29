@@ -828,6 +828,7 @@ input:checked + .slider:before {
     position: relative;
     display: inline-flex;
     align-items: center;
+    vertical-align: middle;
 }
 
 .tooltip-icon {
@@ -847,24 +848,25 @@ input:checked + .slider:before {
 .tooltip-content {
     visibility: hidden;
     width: 280px;
-    background-color: #1e293b;
+    background-color: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(12px);
     color: #ffffff;
     text-align: left;
-    border-radius: 10px;
-    padding: 14px;
+    border-radius: 12px;
+    padding: 16px;
     position: absolute;
-    z-index: 1000;
+    z-index: 10000;
     bottom: 140%;
-    left: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
     opacity: 0;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 400;
     line-height: 1.6;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
     pointer-events: none;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    transform: translateY(10px);
 }
 
 .tooltip-content b {
@@ -887,11 +889,26 @@ input:checked + .slider:before {
 .tooltip-container:hover .tooltip-content {
     visibility: visible;
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
 }
 
 /* Sidebar specific tooltip positioning */
 .sidebar .tooltip-content {
-    left: -10px;
-    bottom: 160%;
+    position: fixed;
+    left: 265px;
+    bottom: 120px;
+    transform: translateX(10px);
+    width: 300px;
+}
+
+.sidebar .tooltip-container:hover .tooltip-content {
+    transform: translateX(0);
+}
+
+.sidebar .tooltip-content::after {
+    top: auto;
+    bottom: 20px;
+    left: -12px;
+    border-color: transparent rgba(30, 41, 59, 0.95) transparent transparent;
+    transform: rotate(0);
 }
