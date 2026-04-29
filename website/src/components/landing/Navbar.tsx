@@ -17,7 +17,7 @@ export default function Navbar() {
   return (
     <nav className={`navbar ${scrolled ? "scrolled" : ""}`} id="navbar">
       <div className="container">
-        <a href="#" className="logo">
+        <a href="/" className="logo">
           <i className="fas fa-shield-alt logo-icon"></i>
           <span className="logo-text">FocusShield</span>
         </a>

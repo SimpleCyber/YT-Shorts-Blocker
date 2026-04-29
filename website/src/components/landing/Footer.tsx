@@ -8,13 +8,13 @@ export default function Footer() {
     <footer>
       <div className="container">
         <div className="footer-content">
-          <a href="#" className="logo">
+          <a href="/" className="logo">
             <i className="fas fa-shield-alt logo-icon"></i>
             <span className="logo-text">FocusShield</span>
           </a>
           <div className="footer-links">
             <a href="#features">Features</a>
-            <a href="#privacy">Privacy</a>
+            <a href="/privacy">Privacy</a>
             <a href="mailto:support@focusshield.app">Support</a>
           </div>
         </div>
