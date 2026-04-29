@@ -1,7 +1,18 @@
 const DEFAULTS = {
   blockedSites: ["youtube.com/shorts", "instagram.com/reels"],
+  blockedCategories: [],
+  blockedKeywords: [],
   duration: 60, // seconds
-  lockUntil: 0 // timestamp
+  lockUntil: 0, // timestamp
+  isBlockingEnabled: true,
+  isWhitelistMode: false
+};
+
+const CATEGORY_LISTS = {
+  social: ['facebook.com', 'instagram.com', 'x.com', 'tiktok.com', 'snapchat.com', 'reddit.com', 'pinterest.com'],
+  news: ['cnn.com', 'foxnews.com', 'nytimes.com', 'bbc.com', 'buzzfeed.com'],
+  sports: ['espn.com', 'nba.com', 'nfl.com', 'skysports.com'],
+  shopping: ['amazon.com', 'ebay.com', 'walmart.com', 'target.com', 'aliexpress.com']
 };
 
 async function getSettings() {
@@ -866,9 +877,43 @@ function createSandglassTimer() {
 async function isBlockedUrl() {
   const url = window.location.href.toLowerCase();
   const settings = await getSettings();
-  return settings.blockedSites
-    .filter(site => site.trim().length > 0)
-    .some(site => url.includes(site));
+  
+  if (settings.isBlockingEnabled === false) return false;
+  
+  let allBlockedSites = [...(settings.blockedSites || [])];
+  
+  const activeCats = settings.blockedCategories || [];
+  activeCats.forEach(catId => {
+    if (CATEGORY_LISTS[catId]) {
+      allBlockedSites.push(...CATEGORY_LISTS[catId]);
+    }
+  });
+  
+  const siteList = allBlockedSites.filter(site => site.trim().length > 0);
+  let isBlocked = siteList.some(site => url.includes(site));
+  
+  if (!isBlocked && !settings.isWhitelistMode) {
+    const keywords = (settings.blockedKeywords || []).filter(kw => kw.trim().length > 0);
+    if (keywords.length > 0) {
+      const pageText = [
+        document.title,
+        document.querySelector('meta[name="description"]')?.content || '',
+        document.querySelector('meta[name="keywords"]')?.content || ''
+      ].join(' ').toLowerCase();
+      
+      isBlocked = keywords.some(kw => pageText.includes(kw.toLowerCase()));
+    }
+  }
+  
+  if (settings.isWhitelistMode) {
+    // Whitelist mode: block if NOT in list
+    // Allow blank/new tabs (chrome://, about:blank)
+    if (url.startsWith('chrome://') || url.startsWith('about:') || url.startsWith('chrome-extension://')) return false;
+    return !isBlocked;
+  } else {
+    // Normal blocklist mode
+    return isBlocked;
+  }
 }
 
 // Main function to manage viewing and apply timer

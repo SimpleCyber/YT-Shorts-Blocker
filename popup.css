@@ -1,6 +1,6 @@
 :root {
-    --primary: #10b981;
-    --primary-hover: #059669;
+    --primary: #22c55e;
+    --primary-hover: #16a34a;
     --bg-main: #ffffff;
     --bg-secondary: #f8fafc;
     --bg-tab-active: #f1f5f9;
@@ -45,7 +45,7 @@ body {
 }
 
 .shield-icon {
-    color: #ff4d4f;
+    color: #ef4444;
     font-size: 24px;
 }
 
@@ -55,7 +55,7 @@ body {
     right: -4px;
     width: 8px;
     height: 8px;
-    background: #3b82f6;
+    background: var(--primary);
     border-radius: 50%;
     border: 2px solid white;
 }
@@ -126,7 +126,7 @@ body {
 
 /* Block Sites Tab */
 .current-site-header {
-    background: #4f46e5; /* Match mockup blue header */
+    background: var(--primary);
     margin: -20px -20px 20px -20px;
     padding: 40px 20px 30px 20px;
     text-align: center;

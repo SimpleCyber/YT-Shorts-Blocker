@@ -74,6 +74,11 @@ async function initBlockSites() {
             currentDomain = hostname;
             domainDisplay.textContent = currentDomain;
 
+            const iconWrapper = document.querySelector('.site-icon-wrapper');
+            if (iconWrapper) {
+                iconWrapper.innerHTML = `<img src="https://www.google.com/s2/favicons?domain=${hostname}&sz=64" style="width: 32px; height: 32px; border-radius: 8px;" onerror="this.src='icon.png'">`;
+            }
+
             // Check if already blocked
             chrome.storage.local.get(DEFAULTS, (result) => {
                 const blocked = result.blockedSites || [];
@@ -186,7 +191,7 @@ function initInsights() {
             domains.sort((a, b) => data[b] - data[a]);
             
             // Generate HTML
-            insightsDataState.innerHTML = domains.slice(0, 8).map(domain => {
+            insightsDataState.innerHTML = domains.slice(0, 4).map(domain => {
                 const seconds = data[domain];
                 let timeStr = "";
                 if (seconds < 60) timeStr = `${seconds}s`;
