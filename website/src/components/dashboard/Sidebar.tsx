@@ -6,35 +6,43 @@ interface SidebarProps {
   activeView: string;
   onNavigate: (view: string) => void;
   isAdminUnlocked: boolean;
-  onAdminToggle: () => void;
   isBlockingEnabled: boolean;
   onBlockingToggle: (enabled: boolean) => void;
+  featureFlags?: {
+    usageLimit: boolean;
+    insights: boolean;
+    focusMode: boolean;
+    blockSites: boolean;
+    passwordProtection: boolean;
+    settings: boolean;
+    aboutBlocking: boolean;
+  };
 }
 
 export default function Sidebar({
   activeView,
   onNavigate,
   isAdminUnlocked,
-  onAdminToggle,
   isBlockingEnabled,
   onBlockingToggle,
+  featureFlags,
 }: SidebarProps) {
   const navItems = [
-    { id: "view-block-sites", icon: "fa-th-large", label: "Block Sites" },
-    { id: "view-usage-limit", icon: "fa-hourglass-half", label: "Usage Limit" },
-    { id: "view-insights", icon: "fa-chart-bar", label: "Insights" },
-    { id: "view-focus-mode", icon: "fa-bullseye", label: "Focus Mode" },
-  ];
+    { id: "view-block-sites", icon: "fa-th-large", label: "Block Sites", visible: featureFlags?.blockSites !== false },
+    { id: "view-usage-limit", icon: "fa-hourglass-half", label: "Usage Limit", visible: featureFlags?.usageLimit !== false },
+    { id: "view-insights", icon: "fa-chart-bar", label: "Insights", visible: featureFlags?.insights !== false },
+    { id: "view-focus-mode", icon: "fa-bullseye", label: "Focus Mode", visible: featureFlags?.focusMode !== false },
+  ].filter(item => item.visible);
 
   const lockedItems = [
-    { id: "view-password", icon: "fa-lock", label: "Password Protection" },
-    { id: "view-custom-page", icon: "fa-edit", label: "Custom Block Page" },
-  ];
+    { id: "view-password", icon: "fa-lock", label: "Password Protection", visible: featureFlags?.passwordProtection !== false },
+    { id: "view-custom-page", icon: "fa-edit", label: "Custom Block Page", visible: featureFlags?.passwordProtection !== false },
+  ].filter(item => item.visible);
 
   const bottomItems = [
-    { id: "view-settings", icon: "fa-cog", label: "Settings" },
-    { id: "view-privacy", icon: "fa-info-circle", label: "About" },
-  ];
+    { id: "view-settings", icon: "fa-cog", label: "Settings", visible: featureFlags?.settings !== false },
+    { id: "view-privacy", icon: "fa-info-circle", label: "About", visible: featureFlags?.aboutBlocking !== false },
+  ].filter(item => item.visible);
 
   return (
     <aside className="sidebar">
@@ -53,7 +61,7 @@ export default function Sidebar({
           </a>
         ))}
 
-        <div className="nav-divider"></div>
+        {lockedItems.length > 0 && <div className="nav-divider"></div>}
 
         {lockedItems.map((item) => (
           <a
@@ -77,7 +85,7 @@ export default function Sidebar({
           </a>
         ))}
 
-        <div className="nav-divider"></div>
+        {bottomItems.length > 0 && <div className="nav-divider"></div>}
 
         {bottomItems.map((item) => (
           <a
@@ -89,27 +97,30 @@ export default function Sidebar({
           </a>
         ))}
 
-        <div className="nav-divider"></div>
-
-        <div
-          className="nav-item"
-          style={{ cursor: "default", justifyContent: "space-between" }}
-        >
-          <div style={{ display: "flex", gap: "12px" }}>
-            <i className="fas fa-ban"></i> Blocking
-          </div>
-          <label className="switch">
-            <input
-              type="checkbox"
-              checked={isBlockingEnabled}
-              onChange={(e) => onBlockingToggle(e.target.checked)}
-            />
-            <span className="slider"></span>
-          </label>
-        </div>
+        {featureFlags?.blockSites !== false && (
+          <>
+            <div className="nav-divider"></div>
+            <div
+              className="nav-item"
+              style={{ cursor: "default", justifyContent: "space-between" }}
+            >
+              <div style={{ display: "flex", gap: "12px" }}>
+                <i className="fas fa-ban"></i> Blocking
+              </div>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={isBlockingEnabled}
+                  onChange={(e) => onBlockingToggle(e.target.checked)}
+                />
+                <span className="slider"></span>
+              </label>
+            </div>
+          </>
+        )}
       </nav>
 
-      {!isAdminUnlocked && (
+      {(!isAdminUnlocked && featureFlags?.passwordProtection !== false) && (
         <div className="premium-card premium-element">
           <i className="fas fa-unlock-alt"></i>
           <div className="premium-title">Password Protection</div>

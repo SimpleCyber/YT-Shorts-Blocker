@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { getData, setData, DEFAULTS, MODAL_CATEGORIES, ADULT_KEYWORDS, FREE_LIMIT } from "../../lib/extensionBridge";
+import { useFocusData } from "../../lib/FocusDataContext";
 
 interface BlockSitesProps {
   isAdminUnlocked: boolean;
@@ -9,50 +10,23 @@ interface BlockSitesProps {
 }
 
 export default function BlockSites({ isAdminUnlocked, onOpenModal }: BlockSitesProps) {
-  const [blockedSites, setBlockedSites] = useState<string[]>([]);
-  const [blockedCategories, setBlockedCategories] = useState<string[]>([]);
-  const [blockedKeywords, setBlockedKeywords] = useState<string[]>([]);
-  const [isWhitelistMode, setIsWhitelistMode] = useState(false);
+  const { data, updateData } = useFocusData();
+  const { blockedSites, blockedCategories, blockedKeywords, isWhitelistMode } = data;
 
-  const loadData = useCallback(async () => {
-    try {
-      const result = await getData([
-        "blockedSites", "blockedCategories", "blockedKeywords", "isWhitelistMode",
-      ]);
-      setBlockedSites((result.blockedSites as string[]) || DEFAULTS.blockedSites);
-      setBlockedCategories((result.blockedCategories as string[]) || []);
-      setBlockedKeywords((result.blockedKeywords as string[]) || []);
-      setIsWhitelistMode((result.isWhitelistMode as boolean) || false);
-    } catch {
-      // Extension not installed — use defaults silently
-      setBlockedSites(DEFAULTS.blockedSites);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  const deleteSite = async (site: string) => {
-    const updated = blockedSites.filter((s) => s !== site);
-    await setData({ blockedSites: updated });
-    setBlockedSites(updated);
+  const deleteSite = (site: string) => {
+    updateData({ blockedSites: blockedSites.filter((s) => s !== site) });
   };
 
-  const deleteCategory = async (catId: string) => {
-    const updated = blockedCategories.filter((c) => c !== catId);
-    await setData({ blockedCategories: updated });
-    setBlockedCategories(updated);
+  const deleteCategory = (catId: string) => {
+    updateData({ blockedCategories: blockedCategories.filter((c) => c !== catId) });
   };
 
-  const deleteKeywords = async () => {
-    await setData({ blockedKeywords: [] });
-    setBlockedKeywords([]);
+  const deleteKeywords = () => {
+    updateData({ blockedKeywords: [] });
   };
 
-  const toggleWhitelist = async (checked: boolean) => {
-    setIsWhitelistMode(checked);
-    await setData({ isWhitelistMode: checked });
+  const toggleWhitelist = (checked: boolean) => {
+    updateData({ isWhitelistMode: checked });
   };
 
   const totalItems = blockedSites.length + blockedCategories.length + (blockedKeywords.length > 0 ? 1 : 0);

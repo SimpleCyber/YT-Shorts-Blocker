@@ -11,6 +11,7 @@ export default function AdminSidebar({ activeView, onNavigate }: AdminSidebarPro
   const navItems = [
     { id: "overview", icon: "fa-chart-pie", label: "Overview" },
     { id: "users", icon: "fa-users", label: "User Management" },
+    { id: "features", icon: "fa-toggle-on", label: "Feature Management" },
     { id: "revenue", icon: "fa-dollar-sign", label: "Revenue" },
   ];
 

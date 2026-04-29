@@ -1,14 +1,62 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { collection, query, getDocs, doc, updateDoc, orderBy } from "firebase/firestore";
+import { db } from "../../lib/firebase";
+
+interface UserData {
+  uid: string;
+  name: string;
+  username: string;
+  displayName: string;
+  email: string;
+  plan?: string;
+  createdAt?: any;
+  lastLogin?: any;
+}
 
 export default function UserTable() {
-  const users = [
-    { name: "John Doe", email: "john@example.com", plan: "Premium", status: "Active", joined: "2024-04-20" },
-    { name: "Alice Smith", email: "alice@outlook.com", plan: "Free", status: "Active", joined: "2024-04-25" },
-    { name: "Robert Wilson", email: "bob@gmail.com", plan: "Premium", status: "Inactive", joined: "2024-03-15" },
-    { name: "Emily Brown", email: "emily@tech.io", plan: "Free", status: "Active", joined: "2024-04-28" },
-  ];
+  const [users, setUsers] = useState<UserData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [updatingUid, setUpdatingUid] = useState<string | null>(null);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      console.log("Fetching users from Firestore...");
+      const q = query(collection(db, "users"));
+      const querySnapshot = await getDocs(q);
+      console.log("Users found:", querySnapshot.size);
+      const userList: UserData[] = [];
+      querySnapshot.forEach((doc) => {
+        userList.push({ uid: doc.id, ...doc.data() } as UserData);
+      });
+      setUsers(userList);
+    } catch (err) {
+      console.error("Error fetching users:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleUpdatePlan = async (uid: string, newPlan: string) => {
+    setUpdatingUid(uid);
+    try {
+      const userRef = doc(db, "users", uid);
+      await updateDoc(userRef, { plan: newPlan });
+      setUsers(users.map(u => u.uid === uid ? { ...u, plan: newPlan } : u));
+    } catch (err) {
+      console.error("Error updating plan:", err);
+    } finally {
+      setUpdatingUid(null);
+    }
+  };
+
+  if (loading) return <div style={{ padding: "40px", textAlign: "center" }}>Loading users...</div>;
 
   return (
     <section className="view-section">
@@ -18,38 +66,45 @@ export default function UserTable() {
       <div className="table-container">
         <div className="table-header">
           <div>USER</div>
-          <div>PLAN</div>
-          <div>JOINED</div>
-          <div>STATUS</div>
+          <div>EMAIL</div>
+          <div>PLAN STATUS</div>
+          <div>ACTIONS</div>
         </div>
 
-        {users.map((user, i) => (
-          <div key={i} className="table-row">
-            <div className="user-info">
-              <div className="user-avatar">{user.name.charAt(0)}</div>
+        {users.length === 0 ? (
+          <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>No users found.</div>
+        ) : (
+          users.map((user) => (
+            <div key={user.uid} className="table-row">
+              <div className="user-info">
+                <div className="user-avatar">{user.name?.charAt(0) || user.displayName?.charAt(0) || "U"}</div>
+                <div>
+                  <div style={{ fontWeight: 600 }}>{user.name || user.displayName || "Anonymous"}</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>@{user.username}</div>
+                </div>
+              </div>
+              <div style={{ color: "var(--text-muted)", fontSize: "13px" }}>{user.email}</div>
               <div>
-                <div style={{ fontWeight: 600 }}>{user.name}</div>
-                <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>{user.email}</div>
+                <span className={`badge ${user.plan === "unlimited" || user.plan === "premium" ? "badge-active" : "badge-inactive"}`}>
+                  {user.plan || "free"}
+                </span>
+              </div>
+              <div>
+                <select 
+                  className="btn-outline" 
+                  style={{ padding: "4px 8px", fontSize: "12px", borderRadius: "6px", cursor: "pointer" }}
+                  value={user.plan || "free"}
+                  disabled={updatingUid === user.uid}
+                  onChange={(e) => handleUpdatePlan(user.uid, e.target.value)}
+                >
+                  <option value="free">Free Plan</option>
+                  <option value="unlimited">Unlimited</option>
+                  <option value="premium">Premium</option>
+                </select>
               </div>
             </div>
-            <div style={{ fontWeight: 500 }}>{user.plan}</div>
-            <div style={{ color: "var(--text-muted)" }}>{user.joined}</div>
-            <div>
-              <span className={`badge ${user.status === "Active" ? "badge-active" : "badge-inactive"}`}>
-                {user.status}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ marginTop: "24px", textAlign: "center" }}>
-        <button className="btn btn-outline">
-          <i className="fas fa-chevron-left"></i> Previous
-        </button>
-        <button className="btn btn-outline" style={{ marginLeft: "12px" }}>
-          Next <i className="fas fa-chevron-right"></i>
-        </button>
+          ))
+        )}
       </div>
     </section>
   );

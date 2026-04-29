@@ -130,10 +130,50 @@ chrome.idle.onStateChanged.addListener((newState) => {
     }
 });
 
-// Periodic save every 10 seconds just in case Chrome closes abruptly
-chrome.alarms.create("saveTimeAlarm", { periodInMinutes: 0.2 }); // ~12 seconds
+// Periodic save every 10 seconds
+chrome.alarms.create("saveTimeAlarm", { periodInMinutes: 0.2 });
 chrome.alarms.onAlarm.addListener((alarm) => {
-    if (alarm.name === "saveTimeAlarm") {
-        recordTime();
+    if (alarm.name === "saveTimeAlarm") recordTime();
+});
+
+// Broadcast changes to Website Dashboard
+chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local') return;
+
+    // Relevant keys for the dashboard
+    const syncKeys = ['blockedSites', 'blockedCategories', 'blockedKeywords', 'usageLimits', 'isBlockingEnabled', 'isWhitelistMode', 'settings', 'ext_blockSites', 'ext_focusMode', 'ext_insights'];
+    const hasSyncChange = Object.keys(changes).some(key => syncKeys.includes(key));
+
+    if (hasSyncChange) {
+        chrome.storage.local.get([...syncKeys, 'authUser'], (data) => {
+            const uid = data.authUser?.uid;
+            
+            // 1. Sync to Website Tabs (Local)
+            chrome.tabs.query({ url: ["*://localhost/*", "*://focus-shield.vercel.app/*"] }, (tabs) => {
+                tabs.forEach(tab => {
+                    chrome.scripting.executeScript({
+                        target: { tabId: tab.id },
+                        func: (payload) => {
+                            window.postMessage({ type: "FOCUS_SHIELD_EXT_UPDATE", payload }, "*");
+                        },
+                        args: [data]
+                    }).catch(() => {});
+                });
+            });
+
+            // 2. Sync to Firestore (Cloud) via Next.js API
+            if (uid) {
+                const config = {};
+                syncKeys.forEach(k => { if (data[k] !== undefined) config[k] = data[k]; });
+                
+                fetch('http://localhost:3000/api/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ uid, config })
+                }).then(r => r.json())
+                  .then(res => console.log('Cloud Sync Success:', res))
+                  .catch(err => console.error('Cloud Sync Failed:', err));
+            }
+        });
     }
 });

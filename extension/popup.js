@@ -248,6 +248,27 @@ document.addEventListener('DOMContentLoaded', () => {
             initBlockSites();
             updateTimerDisplay();
             initInsights();
+
+            // Handle Feature Visibility from Admin
+            chrome.storage.local.get(['ext_blockSites', 'ext_focusMode', 'ext_insights'], (flags) => {
+                const navBlock = document.querySelector('[data-target="tab-block"]');
+                const navFocus = document.querySelector('[data-target="tab-focus"]');
+                const navInsights = document.querySelector('[data-target="tab-insights"]');
+
+                if (flags.ext_blockSites === false) {
+                    if (navBlock) navBlock.style.display = 'none';
+                    // If active tab is hidden, switch to next available
+                    if (navBlock?.classList.contains('active')) navFocus?.click();
+                }
+                if (flags.ext_focusMode === false) {
+                    if (navFocus) navFocus.style.display = 'none';
+                    if (navFocus?.classList.contains('active')) navInsights?.click();
+                }
+                if (flags.ext_insights === false) {
+                    if (navInsights) navInsights.style.display = 'none';
+                    if (navInsights?.classList.contains('active')) navBlock?.click();
+                }
+            });
             
             // Check if there was a running timer state
             chrome.storage.local.get(['focusTimerState'], (timerResult) => {

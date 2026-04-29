@@ -55,9 +55,16 @@ async function saveUserToFirestore(user: User, photoBase64: string | null) {
   const userRef = doc(db, "users", user.uid);
   const existing = await getDoc(userRef);
 
+  const name = user.displayName || "User";
+  const email = user.email || "";
+  const username = email.split("@")[0] || "user_" + user.uid.substring(0, 5);
+
   const userData: Record<string, unknown> = {
-    email: user.email,
-    displayName: user.displayName || "User",
+    uid: user.uid,
+    email: email,
+    name: name,
+    displayName: name,
+    username: username,
     photoURL: user.photoURL || null,
     photoBase64: photoBase64,
     lastLogin: serverTimestamp(),
@@ -65,6 +72,7 @@ async function saveUserToFirestore(user: User, photoBase64: string | null) {
 
   if (!existing.exists()) {
     userData.createdAt = serverTimestamp();
+    userData.plan = "free";
   }
 
   await setDoc(userRef, userData, { merge: true });

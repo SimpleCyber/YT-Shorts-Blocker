@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminOverview from "../../components/admin/AdminOverview";
 import UserTable from "../../components/admin/UserTable";
+import FeatureManagement from "../../components/admin/FeatureManagement";
 import "./admin.css";
 
 export default function AdminPage() {
@@ -40,6 +41,8 @@ export default function AdminPage() {
         return <AdminOverview />;
       case "users":
         return <UserTable />;
+      case "features":
+        return <FeatureManagement />;
       default:
         return (
           <div className="view-section active">

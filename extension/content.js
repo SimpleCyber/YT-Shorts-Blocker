@@ -5,7 +5,8 @@ const DEFAULTS = {
   duration: 60, // seconds
   lockUntil: 0, // timestamp
   isBlockingEnabled: true,
-  isWhitelistMode: false
+  isWhitelistMode: false,
+  usageLimits: []
 };
 
 const CATEGORY_LISTS = {
@@ -895,16 +896,27 @@ async function isBlockedUrl() {
   if (settings.isBlockingEnabled === false) return false;
   
   let allBlockedSites = [...(settings.blockedSites || [])];
-  
   const activeCats = settings.blockedCategories || [];
   activeCats.forEach(catId => {
     if (CATEGORY_LISTS[catId]) {
       allBlockedSites.push(...CATEGORY_LISTS[catId]);
     }
   });
-  
+
   const siteList = allBlockedSites.filter(site => site.trim().length > 0);
   let isBlocked = siteList.some(site => url.includes(site));
+
+  // Check Usage Limits
+  if (!isBlocked && settings.usageLimits && settings.usageLimits.length > 0) {
+    const todayKey = `insights_${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
+    const usageData = await new Promise(r => chrome.storage.local.get([todayKey], data => r(data[todayKey] || {})));
+    
+    const limitObj = settings.usageLimits.find(u => url.includes(u.domain));
+    if (limitObj && limitObj.limitMinutes > 0) {
+      const minsUsed = Math.floor((usageData[limitObj.domain] || 0) / 60);
+      if (minsUsed >= limitObj.limitMinutes) isBlocked = true;
+    }
+  }
   
   const keywords = [...(settings.blockedKeywords || [])];
   
@@ -936,8 +948,15 @@ async function isBlockedUrl() {
   
   if (settings.isWhitelistMode) {
     // Whitelist mode: block if NOT in list
-    // Allow blank/new tabs (chrome://, about:blank)
-    if (url.startsWith('chrome://') || url.startsWith('about:') || url.startsWith('chrome-extension://')) return false;
+    // Allow blank/new tabs and the Dashboard itself
+    if (
+      url.startsWith('chrome://') || 
+      url.startsWith('about:') || 
+      url.startsWith('chrome-extension://') ||
+      url.includes('localhost') ||
+      url.includes('127.0.0.1') ||
+      url.includes('focus-shield.vercel.app')
+    ) return false;
     return !isBlocked;
   } else {
     // Normal blocklist mode
@@ -977,6 +996,9 @@ new MutationObserver(() => {
     manageViewing();
   }
 }).observe(document, { subtree: true, childList: true });
+
+// Periodic check every 30 seconds (to catch usage limit expiry mid-session)
+setInterval(manageViewing, 30000);
 
 // Initial check
 manageViewing();
