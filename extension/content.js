@@ -802,29 +802,6 @@ function createSandglassTimer() {
       });
     }
   };
-}
-
-// Add communication bridge for Next.js Website Dashboard
-window.addEventListener("message", (event) => {
-  if (event.source !== window) return;
-  if (event.data && event.data.type === "FOCUS_SHIELD_SYNC") {
-    // Forward the message to the background script
-    try {
-      chrome.runtime.sendMessage(event.data.payload, (response) => {
-        // Send response back to the Next.js app
-        window.postMessage({ 
-          type: "FOCUS_SHIELD_SYNC_RESPONSE", 
-          actionType: event.data.actionType,
-          response 
-        }, "*");
-      });
-    } catch (e) {
-      console.error("FocusShield: Error sending message to background", e);
-    }
-  }
-});
-
-
 
   addSiteBtn.onclick = async () => {
     let newSite = newSiteInput.value.trim().toLowerCase();
@@ -971,10 +948,6 @@ async function isBlockedUrl() {
 // Main function to manage viewing and apply timer
 async function manageViewing() {
   const shouldBlock = await isBlockedUrl();
-  if (shouldBlock && !document.querySelector(".blocker-container")) {
-    const timer = createSandglassTimer();
-    const settings = await getSettings();
-    const durationMs = settings.duration * 1000;
   const existingBlocker = document.querySelector(".blocker-container");
 
   if (shouldBlock) {
@@ -1008,4 +981,22 @@ new MutationObserver(() => {
 // Initial check
 manageViewing();
 
-}
+// Add communication bridge for Next.js Website Dashboard
+window.addEventListener("message", (event) => {
+  if (event.source !== window) return;
+  if (event.data && event.data.type === "FOCUS_SHIELD_SYNC") {
+    // Forward the message to the background script
+    try {
+      chrome.runtime.sendMessage(event.data.payload, (response) => {
+        // Send response back to the Next.js app
+        window.postMessage({ 
+          type: "FOCUS_SHIELD_SYNC_RESPONSE", 
+          actionType: event.data.actionType,
+          response 
+        }, "*");
+      });
+    } catch (e) {
+      console.error("FocusShield: Error sending message to background", e);
+    }
+  }
+});
