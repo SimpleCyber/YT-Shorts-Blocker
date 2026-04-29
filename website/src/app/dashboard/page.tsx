@@ -205,9 +205,9 @@ export default function DashboardPage() {
             <button className="btn-premium premium-element" style={{ width: "auto" }}>Go Unlimited</button>
           )}
 
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f1f5f9", padding: "4px 12px", borderRadius: "20px", fontWeight: 600, fontSize: "14px" }}>
+          {/* <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f1f5f9", padding: "4px 12px", borderRadius: "20px", fontWeight: 600, fontSize: "14px" }}>
             <i className="fas fa-star" style={{ color: "#64748b" }}></i> 45
-          </div>
+          </div> */}
 
           {/* User info + Sign Out */}
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
