@@ -153,10 +153,21 @@ export default function BlockSites({ isAdminUnlocked, showUpgrade, onOpenModal }
       {(!isAdminUnlocked && showUpgrade) && (
         <div className="banner-upgrade premium-element">
           <div className="banner-text">
-            <strong>{remaining > 0 ? remaining : 0} place{remaining === 1 ? "" : "s"} left</strong> to add to your block list.{" "}
-            <span style={{ color: "var(--text-muted)" }}>
-              Click here to upgrade and enjoy an unlimited block list.
-            </span>
+            {remaining > 0 ? (
+              <>
+                <strong>{remaining} place{remaining === 1 ? "" : "s"} left</strong> to add to your block list.{" "}
+                <span style={{ color: "var(--text-muted)" }}>
+                  Click here to upgrade and enjoy an unlimited block list.
+                </span>
+              </>
+            ) : (
+              <>
+                <strong>Limit reached!</strong> If you want to add more, you have to upgrade.{" "}
+                <span style={{ color: "var(--text-muted)" }}>
+                  Enjoy unlimited sites and categories with FocusShield Unlimited.
+                </span>
+              </>
+            )}
           </div>
           <button className="btn-premium" style={{ width: "auto" }}>Go Unlimited</button>
         </div>

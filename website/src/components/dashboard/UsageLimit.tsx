@@ -159,10 +159,21 @@ export default function UsageLimit({ isAdminUnlocked, showUpgrade, onOpenModal }
       {(!isAdminUnlocked && showUpgrade) && (
         <div className="banner-upgrade premium-element">
           <div className="banner-text">
-            <strong>{remaining > 0 ? remaining : 0} place{remaining === 1 ? "" : "s"} left</strong> to set usage limits.{" "}
-            <span style={{ color: "var(--text-muted)" }}>
-              Click here to upgrade and enjoy unlimited site limits.
-            </span>
+            {remaining > 0 ? (
+              <>
+                <strong>{remaining} place{remaining === 1 ? "" : "s"} left</strong> to set usage limits.{" "}
+                <span style={{ color: "var(--text-muted)" }}>
+                  Click here to upgrade and enjoy unlimited site limits.
+                </span>
+              </>
+            ) : (
+              <>
+                <strong>Limit reached!</strong> If you want to add more, you have to upgrade.{" "}
+                <span style={{ color: "var(--text-muted)" }}>
+                  Take full control of your time with FocusShield Unlimited.
+                </span>
+              </>
+            )}
           </div>
           <button className="btn-premium" style={{ width: "auto" }}>Go Unlimited</button>
         </div>

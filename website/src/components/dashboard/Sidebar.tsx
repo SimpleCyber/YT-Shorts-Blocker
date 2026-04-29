@@ -116,8 +116,17 @@ export default function Sidebar({
               className="nav-item"
               style={{ cursor: "default", justifyContent: "space-between" }}
             >
-              <div style={{ display: "flex", gap: "12px" }}>
-                <i className="fas fa-ban"></i> Blocking
+              <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                <i className="fas fa-ban"></i> 
+                <span>Blocking</span>
+                <div className="tooltip-container">
+                  <i className="fas fa-question-circle tooltip-icon"></i>
+                  <div className="tooltip-content">
+                    <b>What is this for?</b>
+                    1. If the toggle mode is on, then our Chrome extension will come into effect and block the sites and pages.<br/><br/>
+                    2. If it is off, the extension will not apply the blocking mode. It still keeps track of all the websites, counts, and timers, but it will not apply any restrictions like blocking websites or other actions.
+                  </div>
+                </div>
               </div>
               <label className="switch">
                 <input

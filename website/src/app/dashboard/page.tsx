@@ -113,7 +113,7 @@ export default function DashboardPage() {
   const openUsageModal = () => { setModalMode("usage"); setIsModalOpen(true); };
   const handleModalDone = () => { setIsModalOpen(false); setRefreshKey((k) => k + 1); };
 
-  const isUnlimited = userPlan === "unlimited" || userPlan === "premium";
+  const isUnlimited = userPlan?.toLowerCase() === "unlimited" || userPlan?.toLowerCase() === "premium";
 
   const renderActiveView = () => {
     switch (activeView) {
