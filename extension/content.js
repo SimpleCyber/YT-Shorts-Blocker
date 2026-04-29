@@ -616,9 +616,9 @@ function createSandglassTimer() {
       </div>
     </div>
     <div class="timer-panel">
-      <button class="theme-toggle" id="settings-trigger">
+     <!-- <button class="theme-toggle" id="settings-trigger">
         <i class="fas fa-cog"></i>
-      </button>
+      </button> -->
 
       <div class="settings-panel" id="settings-panel">
         <div class="settings-header">

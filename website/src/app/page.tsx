@@ -13,7 +13,19 @@ import Privacy from "../components/landing/Privacy";
 import CTA from "../components/landing/CTA";
 import Footer from "../components/landing/Footer";
 
+import { useAuth } from "../lib/AuthContext";
+import { useRouter } from "next/navigation";
+
 export default function Home() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push("/dashboard");
+    }
+  }, [user, loading, router]);
+
   useEffect(() => {
     // Scroll reveal animation logic
     const revealElements = document.querySelectorAll(".reveal");
