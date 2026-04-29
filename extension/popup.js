@@ -17,6 +17,13 @@ const btnSettingsTop = document.getElementById('open-settings-top');
 const closeBanner = document.getElementById('close-banner');
 const upgradeBanner = document.getElementById('upgrade-banner');
 
+// Auth Gate Elements
+const loginGate = document.getElementById('login-gate');
+const mainContent = document.querySelector('.main-content');
+const bottomNav = document.querySelector('.bottom-nav');
+const btnLogin = document.getElementById('btn-login');
+const avatarImg = document.getElementById('avatar-img');
+
 // Focus Mode Elements
 const timerDisplay = document.getElementById('timer-display');
 const timerProgress = document.querySelector('.timer-progress');
@@ -43,16 +50,23 @@ navItems.forEach(item => {
 
 // Settings & Edit Links
 btnEditList.addEventListener('click', () => {
-    chrome.runtime.openOptionsPage();
+    chrome.tabs.create({ url: "http://localhost:3000/dashboard" });
 });
 
 btnSettingsTop.addEventListener('click', () => {
-    chrome.runtime.openOptionsPage();
+    chrome.tabs.create({ url: "http://localhost:3000/dashboard" });
 });
 
 closeBanner.addEventListener('click', () => {
     upgradeBanner.style.display = 'none';
 });
+
+// Login Button
+if (btnLogin) {
+    btnLogin.addEventListener('click', () => {
+        chrome.tabs.create({ url: "http://localhost:3000/login" });
+    });
+}
 
 // Block Sites Logic
 async function initBlockSites() {
@@ -214,17 +228,39 @@ function initInsights() {
 
 // Initialize Popup
 document.addEventListener('DOMContentLoaded', () => {
-    initBlockSites();
-    updateTimerDisplay();
-    initInsights();
-    
-    // Check if there was a running timer state
-    chrome.storage.local.get(['focusTimerState'], (result) => {
-        if (result.focusTimerState !== undefined) {
-            // Note: In a fully functional app, we'd compare timestamps to account for time passed while popup was closed.
-            // For simplicity here we just restore the visual state.
-            focusTimeLeft = result.focusTimerState;
+    // Check Auth State First
+    chrome.storage.local.get(['authUser'], (result) => {
+        if (result.authUser) {
+            // User is logged in — show main app
+            if (loginGate) loginGate.style.display = 'none';
+            if (mainContent) mainContent.style.display = 'block';
+            if (bottomNav) bottomNav.style.display = 'flex';
+
+            // Update user avatar
+            if (avatarImg) {
+                const photo = result.authUser.photoBase64 || result.authUser.photoURL;
+                if (photo) {
+                    avatarImg.src = photo;
+                }
+            }
+
+            // Init App
+            initBlockSites();
             updateTimerDisplay();
+            initInsights();
+            
+            // Check if there was a running timer state
+            chrome.storage.local.get(['focusTimerState'], (timerResult) => {
+                if (timerResult.focusTimerState !== undefined) {
+                    focusTimeLeft = timerResult.focusTimerState;
+                    updateTimerDisplay();
+                }
+            });
+        } else {
+            // User not logged in — show gate
+            if (mainContent) mainContent.style.display = 'none';
+            if (bottomNav) bottomNav.style.display = 'none';
+            if (loginGate) loginGate.style.display = 'block';
         }
     });
 });

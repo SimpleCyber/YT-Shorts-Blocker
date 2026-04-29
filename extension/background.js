@@ -1,10 +1,41 @@
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === "install") {
     chrome.tabs.create({
-      url: "options.html"
+      url: "http://localhost:3000/dashboard"
     });
   }
 });
+
+// Proxy for website dashboard
+// Message handler for both internal (content script bridge) and external
+const handleMessage = function(request, sender, sendResponse) {
+    if (request.action === "getData") {
+        chrome.storage.local.get(request.keys || null, (result) => {
+            sendResponse(result);
+        });
+        return true;
+    } else if (request.action === "setData") {
+        chrome.storage.local.set(request.data, () => {
+            sendResponse({ success: true });
+        });
+        return true;
+    } else if (request.action === "syncAuth") {
+        // Website user logged in — store auth info
+        chrome.storage.local.set({ authUser: request.user }, () => {
+            sendResponse({ success: true });
+        });
+        return true;
+    } else if (request.action === "signOut") {
+        // Website user signed out — clear auth info
+        chrome.storage.local.remove("authUser", () => {
+            sendResponse({ success: true });
+        });
+        return true;
+    }
+};
+
+chrome.runtime.onMessageExternal.addListener(handleMessage);
+chrome.runtime.onMessage.addListener(handleMessage);
 
 // Time Tracking Logic for Insights
 let activeDomain = null;

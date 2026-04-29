@@ -802,6 +802,29 @@ function createSandglassTimer() {
       });
     }
   };
+}
+
+// Add communication bridge for Next.js Website Dashboard
+window.addEventListener("message", (event) => {
+  if (event.source !== window) return;
+  if (event.data && event.data.type === "FOCUS_SHIELD_SYNC") {
+    // Forward the message to the background script
+    try {
+      chrome.runtime.sendMessage(event.data.payload, (response) => {
+        // Send response back to the Next.js app
+        window.postMessage({ 
+          type: "FOCUS_SHIELD_SYNC_RESPONSE", 
+          actionType: event.data.actionType,
+          response 
+        }, "*");
+      });
+    } catch (e) {
+      console.error("FocusShield: Error sending message to background", e);
+    }
+  }
+});
+
+
 
   addSiteBtn.onclick = async () => {
     let newSite = newSiteInput.value.trim().toLowerCase();

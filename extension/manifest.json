@@ -18,7 +18,7 @@
   "action": {
     "default_popup": "popup.html"
   },
-  "options_page": "options.html",
+
   "background": {
     "service_worker": "background.js"
   },
@@ -31,10 +31,10 @@
       "css": ["timer.css", "styles.css"]
     }
   ],
-  "web_accessible_resources": [
-    {
-      "resources": ["options.html", "options.js"],
-      "matches": ["<all_urls>"]
-    }
-  ]
+  "externally_connectable": {
+    "matches": [
+      "http://localhost/*",
+      "http://127.0.0.1/*"
+    ]
+  }
 }
