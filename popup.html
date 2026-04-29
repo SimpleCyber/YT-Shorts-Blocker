@@ -6,147 +6,118 @@
     <title>FocusShield</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #6366f1;
-            --primary-glow: rgba(99, 102, 241, 0.3);
-            --bg-dark: #0f172a;
-            --bg-card: rgba(30, 41, 59, 0.7);
-            --text-main: #f8fafc;
-            --text-dim: #94a3b8;
-            --accent: #f59e0b;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: radial-gradient(circle at top right, #1e293b, #0f172a);
-            color: var(--text-main);
-            width: 320px;
-            padding: 24px;
-            overflow: hidden;
-        }
-
-        .header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-
-        .logo-shield {
-            font-size: 24px;
-        }
-
-        .logo-text {
-            font-size: 20px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-
-        .status-card {
-            background: var(--bg-card);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 24px;
-            backdrop-filter: blur(10px);
-        }
-
-        .status-label {
-            font-size: 12px;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 4px;
-        }
-
-        .status-value {
-            font-size: 16px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #22c55e;
-            box-shadow: 0 0 10px #22c55e;
-        }
-
-        .action-btn {
-            width: 100%;
-            padding: 12px;
-            border-radius: 12px;
-            border: none;
-            background: var(--primary);
-            color: #fff;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 12px var(--primary-glow);
-        }
-
-        .action-btn:hover {
-            transform: translateY(-2px);
-            background: #4f46e5;
-            box-shadow: 0 6px 16px var(--primary-glow);
-        }
-
-        .footer {
-            margin-top: 16px;
-            text-align: center;
-        }
-
-        .privacy-link {
-            font-size: 11px;
-            color: var(--text-dim);
-            text-decoration: none;
-            opacity: 0.6;
-            transition: opacity 0.2s;
-        }
-
-        .privacy-link:hover {
-            opacity: 1;
-            color: var(--primary);
-        }
-    </style>
+    <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-    <div class="header">
-        <span class="logo-shield">🛡️</span>
-        <span class="logo-text">FocusShield</span>
-    </div>
-
-    <div class="status-card">
-        <div class="status-label">Protection Status</div>
-        <div class="status-value">
-            <span class="status-dot"></span>
-            Active & Shielding
+    <!-- Header -->
+    <header class="header">
+        <div class="logo-section">
+            <i class="fas fa-shield-alt shield-icon"></i>
+            <div class="shield-dot"></div>
         </div>
-    </div>
+        <div class="user-actions">
+            <div class="points-badge">
+                <i class="fas fa-star"></i> 45
+                <img src="icon.png" alt="User" class="user-avatar" id="avatar-img" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2NjYyI+PHBhdGggZD0iTTEyIDJDMiAxMiAyIDEyIDEyIDEyczEwIDAgMTAgMHoiLz48L3N2Zz4='">
+            </div>
+            <i class="fas fa-cog settings-btn" id="open-settings-top"></i>
+        </div>
+    </header>
 
-    <button class="action-btn" id="open-settings">
-        <i class="fas fa-cog"></i>
-        Dashboard & Settings
-    </button>
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Tab 1: Block Sites -->
+        <section id="tab-block" class="tab-content active">
+            <div class="current-site-header">
+                <div class="site-icon-wrapper">
+                    <i class="fas fa-globe"></i>
+                </div>
+            </div>
+            <div class="current-domain" id="current-domain-display">
+                loading...
+            </div>
+            
+            <button class="btn-primary" id="btn-block-site">Block this site</button>
+            <button class="btn-secondary" id="btn-edit-list">Edit block list</button>
 
-    <div class="footer">
-        <a href="privacy.html" target="_blank" class="privacy-link">Privacy Policy</a>
-    </div>
+            <div class="upgrade-banner" id="upgrade-banner">
+                <i class="fas fa-times upgrade-close" id="close-banner"></i>
+                <div class="upgrade-title">2 sites left to add to your block list.</div>
+                <div class="upgrade-subtitle">Click to upgrade & enjoy an unlimited block list.</div>
+            </div>
+        </section>
+
+        <!-- Tab 2: Focus Mode -->
+        <section id="tab-focus" class="tab-content">
+            <div class="focus-header">
+                <div class="focus-progress">
+                    <div class="progress-bar active"></div>
+                    <div class="progress-bar"></div>
+                </div>
+                <div class="focus-status">
+                    1 of 2 cycles | <span>Break for 5 minutes</span>
+                </div>
+            </div>
+
+            <div class="timer-circle-container">
+                <svg class="timer-svg" viewBox="0 0 100 100">
+                    <circle class="timer-bg" cx="50" cy="50" r="40"></circle>
+                    <circle class="timer-progress" cx="50" cy="50" r="40" stroke-dasharray="251.2" stroke-dashoffset="0"></circle>
+                </svg>
+                <div class="timer-text-container">
+                    <div class="timer-time" id="timer-display">00:05:00</div>
+                    <div class="timer-labels">
+                        <span>hr</span><span>min</span><span>sec</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="focus-desc">Access your blocked sites while on break</div>
+
+            <div class="focus-actions">
+                <button class="btn-secondary" id="btn-timer-reset">Reset</button>
+                <button class="btn-primary" id="btn-timer-resume">Resume</button>
+            </div>
+        </section>
+
+        <!-- Tab 3: Insights -->
+        <section id="tab-insights" class="tab-content">
+            <h2 class="insights-title">Insights</h2>
+            <p class="insights-desc">See how you spend your time online to be more productive</p>
+
+            <div id="insights-empty-state">
+                <div class="chart-placeholder">
+                    <div class="chart-bar"></div>
+                    <div class="chart-bar"></div>
+                    <div class="chart-bar"></div>
+                    <div class="chart-bar"></div>
+                    <div class="chart-bar"></div>
+                </div>
+                <h3 class="insights-empty-title">No insights yet. Try again in 24 hours.</h3>
+                <p class="insights-empty-desc">We're still calculating your insights, please check back soon for updates!</p>
+            </div>
+
+            <div id="insights-data-state" class="insights-list">
+                <!-- Insights data injected here -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" data-target="tab-block">
+            <i class="fas fa-th-large"></i>
+            <span>Block Sites</span>
+        </div>
+        <div class="nav-item" data-target="tab-focus">
+            <i class="fas fa-bullseye"></i>
+            <span>Focus Mode</span>
+        </div>
+        <div class="nav-item" data-target="tab-insights">
+            <i class="fas fa-chart-bar"></i>
+            <span>Insights</span>
+        </div>
+    </nav>
 
     <script src="popup.js"></script>
 </body>

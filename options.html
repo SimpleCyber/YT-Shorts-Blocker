@@ -3,352 +3,351 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - FocusShield</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>FocusShield Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #6366f1;
-            --primary-glow: rgba(99, 102, 241, 0.3);
-            --bg-dark: #0f172a;
-            --bg-card: rgba(30, 41, 59, 0.7);
-            --text-main: #f8fafc;
-            --text-dim: #94a3b8;
-            --accent: #f59e0b;
-            --border: rgba(255, 255, 255, 0.1);
-            --danger: #ef4444;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        .background-glow {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.15), transparent 40%),
-                        radial-gradient(circle at 20% 80%, rgba(245, 158, 11, 0.05), transparent 40%);
-            z-index: -1;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 60px;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .logo-shield {
-            font-size: 32px;
-        }
-
-        .logo-text {
-            font-size: 24px;
-            font-weight: 700;
-            background: linear-gradient(to right, #fff, var(--text-dim));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr;
-            gap: 30px;
-        }
-
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 30px;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
-        }
-
-        .card-title {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 25px;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .section-label {
-            font-size: 13px;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 15px;
-            display: block;
-        }
-
-        /* Block List */
-        .block-list {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 16px;
-            margin-bottom: 20px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .block-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            transition: background 0.2s;
-        }
-
-        .block-item:last-child {
-            border-bottom: none;
-        }
-
-        .block-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .remove-site {
-            color: var(--danger);
-            cursor: pointer;
-            opacity: 0.6;
-            transition: opacity 0.2s;
-            padding: 8px;
-        }
-
-        .remove-site:hover {
-            opacity: 1;
-        }
-
-        .add-site-wrap {
-            display: flex;
-            gap: 12px;
-        }
-
-        input {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px 16px;
-            color: #fff;
-            font-family: inherit;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        input:focus {
-            border-color: var(--primary);
-        }
-
-        .btn {
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            border-radius: 12px;
-            padding: 12px 24px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px var(--primary-glow);
-        }
-
-        .btn-danger {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            width: 100%;
-        }
-
-        .btn-danger:hover {
-            background: var(--danger);
-            color: #fff;
-        }
-
-        /* Duration Grid */
-        .duration-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 30px;
-        }
-
-        .duration-option {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 14px;
-        }
-
-        .duration-option:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .duration-option.active {
-            background: var(--primary);
-            border-color: var(--primary);
-            box-shadow: 0 0 15px var(--primary-glow);
-        }
-
-        /* Modal */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(8px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
-        .modal {
-            background: #1e293b;
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 30px;
-            width: 400px;
-            max-width: 90%;
-            animation: slideUp 0.3s ease-out;
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        .lock-status {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--danger);
-            font-weight: 600;
-            margin-top: 10px;
-        }
-
-        @media (max-width: 768px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="options.css">
 </head>
 <body>
-    <div class="background-glow"></div>
-    
-    <div class="container">
-        <header class="header">
-            <div class="logo">
-                <span class="logo-shield">🛡️</span>
-                <span class="logo-text">FocusShield</span>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="brand">
+            <i class="fas fa-shield-alt"></i> FocusShield
+        </div>
+        
+        <nav class="nav-menu">
+            <a class="nav-item active" data-target="view-block-sites">
+                <i class="fas fa-th-large"></i> Block Sites
+            </a>
+            <a class="nav-item" data-target="view-usage-limit">
+                <i class="fas fa-hourglass-half"></i> Usage Limit
+            </a>
+            <a class="nav-item" data-target="view-insights">
+                <i class="fas fa-chart-bar"></i> Insights
+            </a>
+            <a class="nav-item" data-target="view-focus-mode">
+                <i class="fas fa-bullseye"></i> Focus Mode
+            </a>
+            
+            <div class="nav-divider"></div>
+            
+            <a class="nav-item" style="opacity: 0.7; cursor: not-allowed;">
+                <i class="fas fa-lock"></i> Password Protection
+                <span class="badge-locked"><i class="fas fa-lock" style="font-size: 8px;"></i></span>
+            </a>
+            <a class="nav-item" style="opacity: 0.7; cursor: not-allowed;">
+                <i class="fas fa-edit"></i> Custom Block Page
+                <span class="badge-locked"><i class="fas fa-lock" style="font-size: 8px;"></i></span>
+            </a>
+            
+            <div class="nav-divider"></div>
+            
+            <a class="nav-item" data-target="view-settings">
+                <i class="fas fa-cog"></i> Settings
+            </a>
+            <a class="nav-item" href="privacy.html" target="_blank">
+                <i class="fas fa-info-circle"></i> About
+            </a>
+            
+            <div class="nav-divider"></div>
+            
+            <div class="nav-item" style="cursor: default; justify-content: space-between;">
+                <div style="display: flex; gap: 12px;"><i class="fas fa-ban"></i> Blocking</div>
+                <label class="switch">
+                    <input type="checkbox" checked id="master-toggle">
+                    <span class="slider"></span>
+                </label>
             </div>
-            <a href="privacy.html" target="_blank" style="color: var(--text-dim); text-decoration: none; font-size: 14px;">Privacy Policy</a>
-        </header>
+        </nav>
+        
+        <div class="premium-card">
+            <i class="fas fa-unlock-alt"></i>
+            <div class="premium-title">Password Protection</div>
+            <div class="premium-desc">Make it harder to remove sites from your block list</div>
+            <button class="btn-premium">Go Unlimited</button>
+        </div>
+    </aside>
 
-        <main class="grid">
-            <div class="card">
-                <div class="card-title">
-                    <i class="fas fa-list"></i>
-                    Blocking Control
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <header class="header">
+            <button class="btn-premium" style="width: auto;">Go Unlimited</button>
+            <div style="display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 4px 12px; border-radius: 20px; font-weight: 600; font-size: 14px;">
+                <i class="fas fa-star" style="color: #64748b;"></i> 45
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px;">
+                <img src="icon.png" alt="User" style="width: 32px; height: 32px; border-radius: 50%;" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2NjYyI+PHBhdGggZD0iTTEyIDJDMiAxMiAyIDEyIDEyIDEyczEwIDAgMTAgMHoiLz48L3N2Zz4='">
+                User
+            </div>
+        </header>
+        
+        <main class="content-area">
+            
+            <!-- View: Block Sites -->
+            <section id="view-block-sites" class="view-section active">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h1 class="page-title">Block List</h1>
+                        <p class="page-desc">Block sites permanently or by schedule</p>
+                    </div>
+                    <button class="btn btn-outline"><i class="far fa-clock"></i> Schedule</button>
                 </div>
                 
-                <section>
-                    <label class="section-label">Website Block List</label>
-                    <div class="block-list" id="sites-list">
-                        <!-- Sites injected here -->
-                    </div>
-                    <div class="add-site-wrap">
-                        <input type="text" id="site-input" placeholder="e.g. facebook.com">
-                        <button class="btn" id="add-btn">Add Site</button>
-                    </div>
-                    <div id="site-error" style="color: var(--danger); font-size: 12px; margin-top: 8px; display: none;">Site already in list</div>
-                </section>
-            </div>
-
-            <div class="card">
-                <div class="card-title">
-                    <i class="fas fa-clock"></i>
-                    Configurations
+                <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                    <input type="text" id="add-site-input" placeholder="e.g. facebook.com" style="flex: 1; padding: 10px 16px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-family: inherit;">
+                    <button class="btn btn-success" id="btn-add-site"><i class="fas fa-plus"></i> Add to Block List</button>
                 </div>
-
-                <section style="margin-bottom: 40px;">
-                    <label class="section-label">Focus Timer Duration</label>
-                    <div class="duration-grid" id="timer-options">
-                        <div class="duration-option" data-value="60">1 Min</div>
-                        <div class="duration-option" data-value="300">5 Min</div>
-                        <div class="duration-option" data-value="600">10 Min</div>
-                        <div class="duration-option" data-value="1800">30 Min</div>
-                        <div class="duration-option" data-value="3600">1 Hour</div>
-                        <div class="duration-option" data-value="7200">2 Hours</div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="font-size: 16px;">Blocked Items</h3>
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 14px;">
+                        <input type="checkbox" id="whitelist-toggle">
+                        <label for="whitelist-toggle">Whitelist mode</label>
+                        <i class="fas fa-question-circle" style="color: var(--text-muted);"></i>
                     </div>
-                </section>
-
-                <section>
-                    <label class="section-label">Secure Mode (Locked Settings)</label>
-                    <div class="duration-grid" id="lock-options">
-                        <div class="duration-option lock-opt" data-days="1">1 Day</div>
-                        <div class="duration-option lock-opt" data-days="3">3 Days</div>
-                        <div class="duration-option lock-opt" data-days="7">1 Week</div>
+                </div>
+                
+                <div class="table-container" id="block-list-container">
+                    <!-- Items injected via JS -->
+                </div>
+                
+                <div class="action-row">
+                    <button class="btn btn-outline"><i class="fas fa-file-export"></i> Export</button>
+                    <button class="btn btn-outline"><i class="fas fa-file-import"></i> Import</button>
+                </div>
+                
+                <div class="banner-upgrade">
+                    <div class="banner-text">
+                        <strong>2 sites left</strong> to add to your block list. <span style="color: var(--text-muted);">Click here to upgrade and enjoy an unlimited block list.</span>
                     </div>
-                    <button class="btn btn-danger" id="lock-btn">LOCK DASHBOARD</button>
-                    <div id="lock-timer" class="lock-status" style="display: none;">
-                        <i class="fas fa-lock"></i>
-                        <span id="lock-time-left"></span>
+                    <button class="btn-premium" style="width: auto;">Go Unlimited</button>
+                </div>
+            </section>
+            
+            <!-- View: Usage Limit -->
+            <section id="view-usage-limit" class="view-section">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h1 class="page-title">Usage Limit</h1>
+                        <p class="page-desc">Set daily time limits for specific websites or keywords. Once you reach your limit, access will be blocked until the next day.</p>
                     </div>
-                </section>
-            </div>
+                </div>
+                
+                <button class="btn btn-success" style="margin-bottom: 24px;"><i class="fas fa-plus"></i> Add to Block List</button>
+                
+                <h3 style="font-size: 16px; margin-bottom: 16px;">Blocked Items</h3>
+                <div class="table-container">
+                    <div class="table-header">
+                        <div style="width: 40%;">Items</div>
+                        <div style="width: 20%; text-align: center;">Screen time</div>
+                        <div style="width: 20%; text-align: center;">Daily limit</div>
+                        <div style="width: 20%; text-align: right;">Usage status</div>
+                    </div>
+                    
+                    <div class="table-row">
+                        <div class="item-info" style="width: 40%;">
+                            <div class="item-icon">Y</div>
+                            <div class="item-details">
+                                <span class="item-domain">youtube.com</span>
+                                <span class="item-type">Website</span>
+                            </div>
+                        </div>
+                        <div style="width: 20%; text-align: center;">0m</div>
+                        <div style="width: 20%; text-align: center;">
+                            <select style="padding: 6px; border-radius: 4px; border: 1px solid var(--border);">
+                                <option>30 minutes</option>
+                                <option>1 hour</option>
+                                <option>No Limit</option>
+                            </select>
+                        </div>
+                        <div style="width: 20%; text-align: right; display: flex; justify-content: flex-end; align-items: center; gap: 16px;">
+                            <button class="delete-btn"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="banner-upgrade">
+                    <div class="banner-text">
+                        <strong>1 sites left</strong> to add to your block list. <span style="color: var(--text-muted);">Click here to upgrade and enjoy an unlimited block list.</span>
+                    </div>
+                    <button class="btn-premium" style="width: auto;">Go Unlimited</button>
+                </div>
+            </section>
+            
+            <!-- View: Insights -->
+            <section id="view-insights" class="view-section">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px;">
+                    <div>
+                        <h1 class="page-title">Your Focus Insights</h1>
+                        <p class="page-desc">Track Your Focus and See How You Spend Time Online</p>
+                    </div>
+                    <div style="display: flex; gap: 8px; background: var(--bg-hover); padding: 4px; border-radius: 20px;">
+                        <button class="btn" style="background: white; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 6px 16px;">Last 7 days</button>
+                        <button class="btn" style="background: transparent; color: var(--text-muted); padding: 6px 16px;">Last 30 days <i class="fas fa-lock" style="font-size: 10px;"></i></button>
+                    </div>
+                </div>
+                
+                <div class="insights-top-stats">
+                    <div class="stat-card">
+                        <div class="stat-label">Average Focus Time</div>
+                        <div class="stat-value">No Data</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Top Focus Day</div>
+                        <div class="stat-value">No Data</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Most Blocked Category</div>
+                        <div class="stat-value">No Data</div>
+                    </div>
+                </div>
+                
+                <div class="insights-charts">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <span class="chart-title"><i class="far fa-clock"></i> Time Saved</span>
+                            <span class="chart-date">Apr 22 - Today</span>
+                        </div>
+                        <div class="chart-content">Nothing to see yet</div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <span class="chart-title"><i class="fas fa-ban"></i> Blocked Attempts</span>
+                            <span class="chart-date">Apr 22 - Today</span>
+                        </div>
+                        <div class="chart-content">Nothing to see yet</div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <span class="chart-title"><i class="fas fa-list"></i> Blocked Categories</span>
+                            <span class="chart-date">Apr 22 - Today</span>
+                        </div>
+                        <div class="chart-content" style="flex-direction: column; gap: 20px;">
+                            <div style="width: 100px; height: 100px; border-radius: 50%; border: 20px solid #f1f5f9;"></div>
+                            Nothing to see yet
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card" style="align-items: center; text-align: center;">
+                        <div style="margin-bottom: 16px; margin-top: 24px;">
+                            <i class="fas fa-search" style="font-size: 48px; color: var(--primary);"></i>
+                        </div>
+                        <h3 style="margin-bottom: 8px;">Reveal your top distractions</h3>
+                        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Discover your top visited websites in the last 30 days.</p>
+                        <button class="btn btn-success" style="background: #34d399;">Reveal distractions</button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- View: Focus Mode -->
+            <section id="view-focus-mode" class="view-section">
+                <h1 class="page-title">Focus Mode</h1>
+                <p class="page-desc">To focus on a task and be more productive use focus mode to set your work time and break intervals. Add sites to your block list to avoid distractions during a focus session</p>
+                
+                <div class="card focus-container">
+                    <div style="margin-bottom: 24px; color: var(--text-main); font-weight: 600;">
+                        1 of 2 cycles | <span style="color: var(--text-muted);">Focus for 25 minutes</span>
+                    </div>
+                    
+                    <div class="focus-timer">
+                        <svg viewBox="0 0 100 100">
+                            <circle class="focus-timer-bg" cx="50" cy="50" r="40"></circle>
+                            <circle class="focus-timer-progress" cx="50" cy="50" r="40" stroke-dasharray="251.2" stroke-dashoffset="0"></circle>
+                        </svg>
+                        <div class="focus-time-display">
+                            <div class="time-val" id="options-timer-display">25:00</div>
+                            <div class="time-labels"><span>min</span><span>sec</span></div>
+                        </div>
+                    </div>
+                    
+                    <p style="color: var(--text-muted); margin-bottom: 24px;">No sites in block list blocked</p>
+                    
+                    <div class="focus-controls">
+                        <button class="btn btn-outline" style="width: 100px; justify-content: center;" id="opt-btn-reset">Reset</button>
+                        <button class="btn btn-success" style="width: 100px; justify-content: center;" id="opt-btn-resume">Start</button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- View: Settings -->
+            <section id="view-settings" class="view-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h1 class="page-title" style="margin: 0;">Settings</h1>
+                    <button class="btn btn-outline" style="background: var(--bg-hover);">Enable in Incognito Mode</button>
+                </div>
+                
+                <div class="settings-section">
+                    <h3 class="settings-title">General</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-name">Enable FocusShield shortcut option using right-click</div>
+                            <div class="setting-desc">Add sites to your block list or your focus mode list by right-clicking and selecting the FocusShield menu on a website.</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3 class="settings-title">Your Privacy Choices <i class="fas fa-check-circle" style="color: var(--primary);"></i></h3>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5;">We and our affiliates use the information collected to analyze and improve performance, enable certain features and functionality, understand more about users and their interaction with our product and for market intelligence purposes.</p>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-name">Opt Out from Sharing of Browsing Data</div>
+                            <div class="setting-desc">You can stop the sharing of your browsing data by turning off the automated collection of your browsing data.</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3 class="settings-title">View</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-name">Show blocked page motivational images</div>
+                            <div class="setting-desc">Enabling this will show images on a blocked site. Disabling will show a white background.</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-name">Show remaining time on favicon</div>
+                            <div class="setting-desc">Enable this to show the time left in current interval on the extension's favicon.</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3 class="settings-title">Integrations</h3>
+                    <div class="setting-item">
+                        <div class="setting-info" style="display: flex; gap: 16px; align-items: center;">
+                            <i class="fab fa-slack" style="font-size: 24px;"></i>
+                            <div>
+                                <div class="setting-name">Slack</div>
+                                <div class="setting-desc">Upgrade to FocusShield Unlimited to empower your focus with automations for Slack.</div>
+                            </div>
+                        </div>
+                        <button class="btn-premium" style="width: auto;">Go Unlimited</button>
+                    </div>
+                </div>
+            </section>
+            
         </main>
-    </div>
-
-    <!-- Modal for confirmation -->
-    <div class="modal-overlay" id="modal">
-        <div class="modal">
-            <h2 style="margin-bottom: 15px;">Are you sure?</h2>
-            <p style="color: var(--text-dim); margin-bottom: 25px; line-height: 1.5;" id="modal-msg"></p>
-            <div style="display: flex; justify-content: flex-end; gap: 12px;">
-                <button class="btn" style="background: rgba(255,255,255,0.05); color: var(--text-dim);" id="modal-cancel">Cancel</button>
-                <button class="btn" style="background: var(--danger);" id="modal-confirm">Proceed</button>
-            </div>
-        </div>
     </div>
 
     <script src="options.js"></script>
