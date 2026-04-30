@@ -599,6 +599,30 @@ function createSandglassTimer(blockData = {}) {
     .btn-primary:hover {
       background: #4f46e5;
     }
+    .go-back-btn {
+      margin-top: 30px;
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      padding: 12px 30px;
+      border-radius: 30px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .go-back-btn:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
   `;
   document.head.appendChild(styleEl);
 
@@ -695,8 +719,11 @@ function createSandglassTimer(blockData = {}) {
       </div>
       <div class="countdown-wrap">
         <div class="timer-value" id="timer-val">60</div>
-        <div class="timer-label">seconds left</div>
+        <div class="timer-label" id="timer-label">seconds left</div>
       </div>
+      <button class="go-back-btn" id="go-back-btn" style="display: none;">
+        <i class="fas fa-arrow-left"></i> Go Back
+      </button>
     </div>
   `;
 
@@ -762,19 +789,10 @@ function createSandglassTimer(blockData = {}) {
     sitesListEl.innerHTML = settings.blockedSites.map(site => `
       <div class="block-item">
         <span>${site}</span>
-        <i class="fas fa-trash remove-site" data-site="${site}"></i>
       </div>
     `).join('');
 
-    // Add remove listeners
-    sitesListEl.querySelectorAll(".remove-site").forEach(btn => {
-      btn.onclick = async () => {
-        const siteToRemove = btn.dataset.site;
-        const current = await getSettings();
-        const updated = current.blockedSites.filter(s => s !== siteToRemove);
-        chrome.storage.local.set({ blockedSites: updated }, renderSettings);
-      };
-    });
+
 
     // Render active duration
     durationOptions.forEach(opt => {
@@ -844,40 +862,64 @@ function createSandglassTimer(blockData = {}) {
 
   // Timer Logic
   const timerVal = container.querySelector("#timer-val");
+  const timerLabel = container.querySelector("#timer-label");
+  const goBackBtn = container.querySelector("#go-back-btn");
+  
   let timeLeft = 60;
   let timerInterval;
 
-  // Start the particle hourglass animation
+  const isHardBlock = ['site', 'usage_limit', 'keyword', 'whitelist', 'focus_only_site', 'focus_mode'].includes(blockData.reason);
+
+  // Start the particle hourglass animation for ALL blocks (visual only)
   const hgAnimation = window.startHourglass ? window.startHourglass(container) : null;
 
-  getSettings().then(s => {
-    timeLeft = s.duration;
-    timerVal.textContent = timeLeft;
-
-    timerInterval = setInterval(() => {
-      timeLeft--;
+  if (isHardBlock) {
+    // Hide timer for hard blocks
+    timerVal.style.display = 'none';
+    timerLabel.textContent = blockData.reason === 'usage_limit' ? 'Daily Limit Reached' : 'Access Restricted';
+    timerLabel.style.fontSize = '18px';
+    timerLabel.style.fontWeight = '700';
+    timerLabel.style.color = '#fff';
+    
+    // Show Go Back button
+    goBackBtn.style.display = 'flex';
+    goBackBtn.onclick = () => {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.close();
+      }
+    };
+  } else {
+    getSettings().then(s => {
+      timeLeft = s.duration;
       timerVal.textContent = timeLeft;
 
-      if (timeLeft <= 0) {
-        clearInterval(timerInterval);
-        if (hgAnimation && hgAnimation.stop) hgAnimation.stop();
-        timerVal.textContent = "0";
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        timerVal.textContent = timeLeft;
 
-        setTimeout(() => {
-          container.style.opacity = "0";
-          container.style.transition = "opacity 0.8s ease";
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          if (hgAnimation && hgAnimation.stop) hgAnimation.stop();
+          timerVal.textContent = "0";
+
           setTimeout(() => {
-            container.remove();
-            // Resume videos
-            document.querySelectorAll("video").forEach((v) => {
-              v.muted = false;
-              v.play();
-            });
-          }, 800);
-        }, 1000);
-      }
-    }, 1000);
-  });
+            container.style.opacity = "0";
+            container.style.transition = "opacity 0.8s ease";
+            setTimeout(() => {
+              container.remove();
+              // Resume videos
+              document.querySelectorAll("video").forEach((v) => {
+                v.muted = false;
+                v.play();
+              });
+            }, 800);
+          }, 1000);
+        }
+      }, 1000);
+    });
+  }
 
   // Fetch Quote
   async function updateQuote() {

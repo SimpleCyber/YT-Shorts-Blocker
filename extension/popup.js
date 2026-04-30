@@ -121,10 +121,10 @@ async function initBlockSites() {
 
                 if (isBlocked) {
                     btnBlockSite.textContent = "Site is Blocked";
-                    btnBlockSite.style.backgroundColor = "var(--danger)";
-                    btnBlockSite.disabled = false;
-                    btnBlockSite.style.opacity = '1';
-                    btnBlockSite.onclick = () => unblockSite(currentDomain, blocked);
+                    btnBlockSite.style.backgroundColor = "var(--text-dim)";
+                    btnBlockSite.disabled = true;
+                    btnBlockSite.style.opacity = '0.7';
+                    btnBlockSite.onclick = null;
                 } else {
                     const limitReached = !isPremium && blocked.length >= 3;
                     

@@ -57,12 +57,32 @@ chrome.runtime.onMessageExternal.addListener(handleMessage);
 chrome.runtime.onMessage.addListener(handleMessage);
 
 // Time Tracking Logic for Insights
+// These in-memory variables are backed by chrome.storage.local to survive MV3 service worker restarts
 let activeDomain = null;
 let lastSwitchTime = Date.now();
 let isIdle = false;
 
-// Initialize tracking
-chrome.idle.setDetectionInterval(60); // 60 seconds of inactivity triggers idle
+// Increased from 60s to 300s (5 minutes) so that watching videos, reading articles,
+// or any passive browsing is properly tracked as active time
+chrome.idle.setDetectionInterval(300);
+
+// Restore tracking state from storage on service worker startup
+chrome.storage.local.get(['_trackingState'], (result) => {
+    const state = result._trackingState;
+    if (state) {
+        activeDomain = state.activeDomain || null;
+        lastSwitchTime = state.lastSwitchTime || Date.now();
+        isIdle = state.isIdle || false;
+    }
+    // Always re-query the active tab on startup to ensure we're tracking
+    handleTabSwitch();
+});
+
+function saveTrackingState() {
+    chrome.storage.local.set({
+        _trackingState: { activeDomain, lastSwitchTime, isIdle }
+    });
+}
 
 function getTodayKey() {
     const d = new Date();
@@ -82,11 +102,18 @@ function extractDomain(urlStr) {
     }
 }
 
+// Max seconds to record in a single interval.
+// Prevents inflated values when the service worker was asleep for a long time.
+const MAX_RECORD_INTERVAL_SECS = 60;
+
 async function recordTime() {
     if (!activeDomain || isIdle) return;
     
     const now = Date.now();
-    const timeSpentSecs = Math.floor((now - lastSwitchTime) / 1000);
+    let timeSpentSecs = Math.floor((now - lastSwitchTime) / 1000);
+    
+    // Cap at MAX_RECORD_INTERVAL_SECS to avoid counting service worker sleep time
+    timeSpentSecs = Math.min(timeSpentSecs, MAX_RECORD_INTERVAL_SECS);
     
     if (timeSpentSecs > 0) {
         const key = getTodayKey();
@@ -99,6 +126,7 @@ async function recordTime() {
     }
     
     lastSwitchTime = now;
+    saveTrackingState();
 }
 
 async function handleTabSwitch() {
@@ -116,6 +144,7 @@ async function handleTabSwitch() {
     }
     
     lastSwitchTime = Date.now();
+    saveTrackingState();
 }
 
 // Listeners for active tab changes
@@ -132,6 +161,7 @@ chrome.windows.onFocusChanged.addListener((windowId) => {
         // Lost focus completely
         recordTime().then(() => {
             activeDomain = null;
+            saveTrackingState();
         });
     } else {
         handleTabSwitch();
@@ -146,6 +176,7 @@ chrome.idle.onStateChanged.addListener((newState) => {
     } else {
         recordTime();
         isIdle = true;
+        saveTrackingState();
     }
 });
 
@@ -154,7 +185,15 @@ chrome.alarms.create("saveTimeAlarm", { periodInMinutes: 0.2 });
 // Periodic cloud sync every 30 seconds to keep extension data fresh
 chrome.alarms.create("cloudSyncAlarm", { periodInMinutes: 0.5 });
 chrome.alarms.onAlarm.addListener((alarm) => {
-    if (alarm.name === "saveTimeAlarm") recordTime();
+    if (alarm.name === "saveTimeAlarm") {
+        // Re-query the active tab on every tick to recover from service worker restarts
+        // where activeDomain might have been lost despite storage persistence
+        if (!activeDomain && !isIdle) {
+            handleTabSwitch();
+        } else {
+            recordTime();
+        }
+    }
     if (alarm.name === "cloudSyncAlarm") refreshFromCloud();
 });
 
