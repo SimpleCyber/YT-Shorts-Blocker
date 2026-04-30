@@ -154,7 +154,7 @@ export default function Insights({ isAdminUnlocked }: InsightsProps) {
           transition: all 0.2s;
         }
         .btn-toggle.active {
-          background: white;
+          background: var(--bg-card);
           color: var(--primary);
           box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }

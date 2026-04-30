@@ -7,6 +7,7 @@ import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminOverview from "../../components/admin/AdminOverview";
 import UserTable from "../../components/admin/UserTable";
 import FeatureManagement from "../../components/admin/FeatureManagement";
+import ThemeToggle from "../../components/dashboard/ThemeToggle";
 import "./admin.css";
 
 export default function AdminPage() {
@@ -28,7 +29,7 @@ export default function AdminPage() {
 
   if (loading || !user || user.email !== adminEmail) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#f8fafc" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "var(--bg-main)" }}>
         <div style={{ width: "32px", height: "32px", border: "4px solid #e2e8f0", borderTopColor: "#4f46e5", borderRadius: "50%", animation: "spin 0.8s linear infinite" }}></div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
@@ -83,7 +84,8 @@ export default function AdminPage() {
             </div>
 
             {/* Admin Profile */}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <ThemeToggle />
               <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 600, fontSize: "14px" }}>
                 {user.photoURL ? (
                   <img

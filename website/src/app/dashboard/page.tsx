@@ -12,6 +12,7 @@ import FocusMode from "../../components/dashboard/FocusMode";
 import Settings from "../../components/dashboard/Settings";
 import DashboardPrivacy from "../../components/dashboard/DashboardPrivacy";
 import AddBlockModal from "../../components/dashboard/AddBlockModal";
+import ThemeToggle from "../../components/dashboard/ThemeToggle";
 import { doc, getDoc, onSnapshot, DocumentSnapshot } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { FocusData, useFocusData } from "../../lib/FocusDataContext";
@@ -223,9 +224,7 @@ export default function DashboardPage() {
             <button className="btn-premium premium-element" style={{ width: "auto" }}>Go Unlimited</button>
           )}
 
-          {/* <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f1f5f9", padding: "4px 12px", borderRadius: "20px", fontWeight: 600, fontSize: "14px" }}>
-            <i className="fas fa-star" style={{ color: "#64748b" }}></i> 45
-          </div> */}
+          <ThemeToggle />
 
           {/* User info + Sign Out */}
           <div style={{ position: "relative" }}>
@@ -255,7 +254,7 @@ export default function DashboardPage() {
             )}
 
             {showProfileDetails && (
-              <div style={{ position: "absolute", top: "100%", right: 0, marginTop: "8px", background: "white", border: "1px solid var(--border)", borderRadius: "12px", boxShadow: "0 10px 25px rgba(0,0,0,0.1)", padding: "16px", minWidth: "200px", zIndex: 100, display: "flex", flexDirection: "column", gap: "4px" }}>
+              <div style={{ position: "absolute", top: "100%", right: 0, marginTop: "8px", background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "12px", boxShadow: "0 10px 25px rgba(0,0,0,0.1)", padding: "16px", minWidth: "200px", zIndex: 100, display: "flex", flexDirection: "column", gap: "4px" }}>
                 <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-main)" }}>{user.displayName || "User"}</span>
                 <span style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "12px" }}>{user.email}</span>
                 <div style={{ height: "1px", background: "var(--border)", marginBottom: "8px" }}></div>

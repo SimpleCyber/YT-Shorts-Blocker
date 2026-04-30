@@ -1,8 +1,16 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 
 export default function Settings() {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <section id="view-settings" className="view-section active">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
@@ -32,6 +40,31 @@ export default function Settings() {
             <div className="setting-desc">You can stop the sharing of your browsing data by turning off the automated collection of your browsing data.</div>
           </div>
           <label className="switch"><input type="checkbox" /><span className="slider"></span></label>
+        </div>
+      </div>
+
+      <div className="settings-section">
+        <h3 className="settings-title">Appearance</h3>
+        <div className="setting-item">
+          <div className="setting-info">
+            <div className="setting-name">Theme</div>
+            <div className="setting-desc">Select your preferred color theme for the dashboard.</div>
+          </div>
+          <div style={{ display: "flex", gap: "8px" }}>
+            {mounted ? (
+              <select 
+                value={theme}
+                onChange={(e) => setTheme(e.target.value)}
+                style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--bg-main)", color: "var(--text-main)", outline: "none", cursor: "pointer", fontSize: "14px", fontWeight: 600 }}
+              >
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="system">System</option>
+              </select>
+            ) : (
+              <div style={{ width: "90px", height: "36px", borderRadius: "8px", background: "var(--bg-hover)" }}></div>
+            )}
+          </div>
         </div>
       </div>
 

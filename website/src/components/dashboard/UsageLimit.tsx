@@ -55,7 +55,7 @@ function CustomSelect({ value, onChange, options }: { value: number; onChange: (
           justifyContent: 'space-between',
           gap: '8px',
           padding: '10px 14px',
-          background: isOpen ? '#fff' : '#fff',
+          background: 'var(--bg-card)',
           border: `1.5px solid ${isOpen ? 'var(--primary)' : 'var(--border)'}`,
           borderRadius: '10px',
           cursor: 'pointer',
@@ -68,7 +68,7 @@ function CustomSelect({ value, onChange, options }: { value: number; onChange: (
           outline: 'none',
         }}
         onMouseEnter={(e) => { if (!isOpen) { e.currentTarget.style.borderColor = '#94a3b8'; e.currentTarget.style.background = 'var(--bg-hover)'; } }}
-        onMouseLeave={(e) => { if (!isOpen) { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = '#fff'; } }}
+        onMouseLeave={(e) => { if (!isOpen) { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-card)'; } }}
       >
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedOption.label}</span>
         <i
@@ -91,7 +91,7 @@ function CustomSelect({ value, onChange, options }: { value: number; onChange: (
           left: '50%',
           transform: `translateX(-50%) ${isOpen ? 'translateY(0)' : 'translateY(-8px)'}`,
           width: '180px',
-          background: '#ffffff',
+          background: 'var(--bg-card)',
           borderRadius: '12px',
           border: '1px solid var(--border)',
           boxShadow: '0 12px 32px rgba(15, 23, 42, 0.12), 0 4px 8px rgba(15, 23, 42, 0.06)',
@@ -262,7 +262,7 @@ export default function UsageLimit({ isAdminUnlocked, showUpgrade, onOpenModal }
         </div>
         <div id="usage-list-container">
           {usageLimits.length === 0 ? (
-            <div style={{ padding: "60px 20px", textAlign: "center", color: "var(--text-muted)", background: "white", borderRadius: "12px" }}>
+            <div style={{ padding: "60px 20px", textAlign: "center", color: "var(--text-muted)", background: "var(--bg-card)", borderRadius: "12px" }}>
               <i className="fas fa-clock" style={{ fontSize: "40px", marginBottom: "16px", opacity: 0.3 }}></i>
               <p>No usage limits set. Add a site to start tracking!</p>
             </div>

@@ -195,7 +195,7 @@ export default function Sidebar({
           height: 36px;
           border-radius: 50%;
           object-fit: cover;
-          border: 2px solid white;
+          border: 2px solid var(--border);
         }
         .profile-initial {
           width: 36px;
@@ -247,7 +247,7 @@ export default function Sidebar({
           transition: all 0.2s;
         }
         .profile-logout:hover {
-          background: white;
+          background: var(--bg-card);
           color: var(--danger);
           border-color: var(--danger);
         }

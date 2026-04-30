@@ -169,9 +169,9 @@ export default function ScheduleModal({ isOpen, onClose, isAdminUnlocked, showUp
             </div>
           )}
           {isAdminUnlocked && (
-            <div className="upgrade-banner-small" style={{ background: '#ecfdf5', borderColor: '#10b981' }}>
+            <div className="upgrade-banner-small" style={{ background: 'rgba(16, 185, 129, 0.1)', borderColor: 'var(--success)' }}>
               <div className="upgrade-info">
-                <span className="interval-count" style={{ color: '#047857' }}>
+                <span className="interval-count" style={{ color: 'var(--success)' }}>
                   {(localSchedule?.intervals || []).length}/2 Intervals
                 </span>
               </div>
@@ -210,7 +210,7 @@ export default function ScheduleModal({ isOpen, onClose, isAdminUnlocked, showUp
 
       <style jsx>{`
         .schedule-modal {
-          background: #ffffff;
+          background: var(--bg-card);
           width: 500px;
           border-radius: 20px;
           box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -257,7 +257,7 @@ export default function ScheduleModal({ isOpen, onClose, isAdminUnlocked, showUp
           position: absolute;
           top: -8px;
           left: 12px;
-          background: white;
+          background: var(--bg-card);
           padding: 0 4px;
           font-size: 10px;
           color: var(--text-muted);
@@ -269,7 +269,7 @@ export default function ScheduleModal({ isOpen, onClose, isAdminUnlocked, showUp
           border: 1px solid var(--border);
           border-radius: 10px;
           padding: 8px 12px;
-          background: white;
+          background: var(--bg-card);
         }
         .time-field {
           border: none;
@@ -305,18 +305,18 @@ export default function ScheduleModal({ isOpen, onClose, isAdminUnlocked, showUp
         }
         .delete-interval:hover {
           color: var(--danger);
-          background: #fee2e2;
+          background: rgba(239, 68, 68, 0.1);
         }
         .add-interval {
-          background: #f1f5f9;
+          background: var(--bg-hover);
           color: var(--text-main);
         }
         .add-interval:hover {
-          background: #e2e8f0;
+          background: var(--border);
         }
         .upgrade-banner-small {
           margin-top: 16px;
-          background: #f8fafc;
+          background: var(--bg-hover);
           border: 1px solid var(--border);
           border-radius: 12px;
           padding: 8px 16px;
@@ -349,7 +349,7 @@ export default function ScheduleModal({ isOpen, onClose, isAdminUnlocked, showUp
           height: 44px;
           border-radius: 50%;
           border: none;
-          background: #f1f5f9;
+          background: var(--bg-hover);
           color: var(--text-muted);
           font-size: 11px;
           font-weight: 700;
