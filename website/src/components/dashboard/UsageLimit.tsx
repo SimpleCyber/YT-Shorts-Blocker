@@ -15,6 +15,187 @@ interface UsageLimitProps {
   onOpenModal: () => void;
 }
 
+function CustomSelect({ value, onChange, options }: { value: number; onChange: (val: number) => void; options: { value: number; label: string }[] }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  const listRef = React.useRef<HTMLDivElement>(null);
+  const selectedOption = options.find(o => o.value === value) || options[0];
+
+  // Close on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [isOpen]);
+
+  // Scroll selected item into view when dropdown opens
+  useEffect(() => {
+    if (isOpen && listRef.current) {
+      const selectedEl = listRef.current.querySelector('[data-selected="true"]');
+      if (selectedEl) {
+        selectedEl.scrollIntoView({ block: 'center', behavior: 'instant' });
+      }
+    }
+  }, [isOpen]);
+
+  return (
+    <div ref={ref} style={{ position: 'relative', display: 'inline-block', width: '156px', userSelect: 'none', fontFamily: "'Outfit', -apple-system, sans-serif" }}>
+      {/* Trigger button */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '8px',
+          padding: '10px 14px',
+          background: isOpen ? '#fff' : '#fff',
+          border: `1.5px solid ${isOpen ? 'var(--primary)' : 'var(--border)'}`,
+          borderRadius: '10px',
+          cursor: 'pointer',
+          fontSize: '13px',
+          fontWeight: 600,
+          color: 'var(--text-main)',
+          fontFamily: 'inherit',
+          transition: 'all 0.2s ease',
+          boxShadow: isOpen ? '0 0 0 3px rgba(79, 70, 229, 0.1)' : 'none',
+          outline: 'none',
+        }}
+        onMouseEnter={(e) => { if (!isOpen) { e.currentTarget.style.borderColor = '#94a3b8'; e.currentTarget.style.background = 'var(--bg-hover)'; } }}
+        onMouseLeave={(e) => { if (!isOpen) { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = '#fff'; } }}
+      >
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedOption.label}</span>
+        <i
+          className="fas fa-chevron-down"
+          style={{
+            fontSize: '10px',
+            color: 'var(--text-muted)',
+            transition: 'transform 0.25s ease',
+            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+            flexShrink: 0,
+          }}
+        ></i>
+      </button>
+
+      {/* Dropdown panel */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 'calc(100% + 6px)',
+          left: '50%',
+          transform: `translateX(-50%) ${isOpen ? 'translateY(0)' : 'translateY(-8px)'}`,
+          width: '180px',
+          background: '#ffffff',
+          borderRadius: '12px',
+          border: '1px solid var(--border)',
+          boxShadow: '0 12px 32px rgba(15, 23, 42, 0.12), 0 4px 8px rgba(15, 23, 42, 0.06)',
+          zIndex: 9990,
+          padding: '6px',
+          opacity: isOpen ? 1 : 0,
+          pointerEvents: isOpen ? 'auto' : 'none',
+          transition: 'opacity 0.2s ease, transform 0.2s ease',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Scrollable list — shows 5 items (5 × 40px = 200px) */}
+        <div
+          ref={listRef}
+          className="custom-select-scrollbar"
+          style={{
+            maxHeight: '200px',
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '2px',
+          }}
+        >
+          {options.map((opt) => {
+            const isSelected = opt.value === value;
+            return (
+              <button
+                type="button"
+                key={opt.value}
+                data-selected={isSelected ? 'true' : undefined}
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: isSelected ? 600 : 500,
+                  color: isSelected ? 'var(--primary)' : 'var(--text-main)',
+                  background: isSelected ? 'rgba(79, 70, 229, 0.08)' : 'transparent',
+                  fontFamily: 'inherit',
+                  transition: 'all 0.15s ease',
+                  textAlign: 'left',
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.background = 'var(--bg-hover)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.background = 'transparent';
+                  }
+                }}
+              >
+                <span
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  {isSelected && (
+                    <i className="fas fa-check" style={{ fontSize: '11px', color: 'var(--primary)' }}></i>
+                  )}
+                </span>
+                <span style={{ whiteSpace: 'nowrap' }}>{opt.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <style>{`
+        .custom-select-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-select-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+          margin: 4px 0;
+        }
+        .custom-select-scrollbar::-webkit-scrollbar-thumb {
+          background-color: var(--border);
+          border-radius: 20px;
+        }
+        .custom-select-scrollbar::-webkit-scrollbar-thumb:hover {
+          background-color: #94a3b8;
+        }
+      `}</style>
+    </div>
+  );
+}
+
 export default function UsageLimit({ isAdminUnlocked, showUpgrade, onOpenModal }: UsageLimitProps) {
   const { data, updateData } = useFocusData();
   const { usageLimits } = data;
@@ -122,23 +303,22 @@ export default function UsageLimit({ isAdminUnlocked, showUpgrade, onOpenModal }
                         width: `${progress}%`, 
                         background: isOverLimit ? "var(--danger)" : isNearLimit ? "#f59e0b" : "var(--primary)",
                         transition: "width 0.5s ease-in-out",
-                        boxShadow: isNearLimit ? "0 0 10px rgba(245, 158, 11, 0.3)" : "none"
+                        boxShadow: isNearLimit ? "0 0 10px rgba(141, 121, 87, 0.3)" : "none"
                       }} 
                     />
                   </div>
                 </div>
 
-                <div style={{ width: "20%", textAlign: "center" }}>
-                  <select 
+                <div style={{ width: "20%", textAlign: "center", display: "flex", justifyContent: "center" }}>
+                  <CustomSelect 
                     value={item.limitMinutes} 
-                    onChange={(e) => updateLimit(index, parseInt(e.target.value))} 
-                    className="settings-input"
-                    style={{ padding: "8px 12px", borderRadius: "8px", fontSize: "13px", fontWeight: 600, width: "130px", border: "1px solid var(--border)" }}
-                  >
-                    <option value={0}>No Limit</option>
-                    {minuteSteps.map((m) => <option key={m} value={m}>{m} mins</option>)}
-                    {hourSteps.map((m) => <option key={m} value={m}>{m / 60} hours</option>)}
-                  </select>
+                    onChange={(val) => updateLimit(index, val)}
+                    options={[
+                      { value: 0, label: "No Limit" },
+                      ...minuteSteps.map(m => ({ value: m, label: `${m} minutes` })),
+                      ...hourSteps.map(m => ({ value: m, label: `${m / 60} hours` }))
+                    ]}
+                  />
                 </div>
 
                 <div style={{ width: "15%", textAlign: "right" }}>
@@ -178,6 +358,8 @@ export default function UsageLimit({ isAdminUnlocked, showUpgrade, onOpenModal }
           <button className="btn-premium" style={{ width: "auto" }}>Go Unlimited</button>
         </div>
       )}
+
+
     </section>
   );
 }

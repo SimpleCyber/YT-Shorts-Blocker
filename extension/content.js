@@ -32,9 +32,24 @@ const ADULT_KEYWORDS = [
 
 async function getSettings() {
   return new Promise((resolve) => {
-    chrome.storage.local.get(DEFAULTS, (result) => {
-      resolve(result);
-    });
+    try {
+      if (!chrome.runtime || !chrome.runtime.id) {
+        console.warn("FocusShield: Extension context invalidated.");
+        resolve(DEFAULTS);
+        return;
+      }
+      chrome.storage.local.get(DEFAULTS, (result) => {
+        if (chrome.runtime.lastError) {
+          console.warn("FocusShield: Storage error", chrome.runtime.lastError.message);
+          resolve(DEFAULTS);
+        } else {
+          resolve(result);
+        }
+      });
+    } catch (e) {
+      console.warn("FocusShield: Context error", e);
+      resolve(DEFAULTS);
+    }
   });
 }
 
@@ -82,7 +97,7 @@ function showCustomModal({ title, message, confirmText = "Confirm", cancelText =
 }
 
 // Function to create and inject the sandglass timer
-function createSandglassTimer() {
+function createSandglassTimer(blockData = {}) {
   // Add Google Fonts
   if (!document.getElementById("outfit-font")) {
     const fontLink = document.createElement("link");
@@ -605,12 +620,12 @@ function createSandglassTimer() {
     <div class="info-panel">
       <div class="app-title">FocusShield</div>
       <div class="quote-wrap">
-        <div class="quote-text" id="quote-text">"Distraction is the thief of time."</div>
-        <div class="quote-author" id="quote-author">Marcus Aurelius</div>
+        <div class="quote-text" id="quote-text">${blockData.reason === 'focus_mode' ? '"Focus is the key to all success."' : '"Distraction is the thief of time."'}</div>
+        <div class="quote-author" id="quote-author">${blockData.reason === 'focus_mode' ? 'Anonymous' : 'Marcus Aurelius'}</div>
       </div>
       <div class="tips-container">
-        <div class="tip-heading">💡 FOCUS TIP</div>
-        <div class="tip-content" id="focus-tip">Did you know? It takes average 23 minutes to regain full focus after a single distraction.</div>
+        <div class="tip-heading">${blockData.reason === 'focus_mode' ? '🎯 FOCUS MODE ACTIVE' : blockData.reason === 'focus_only_site' ? '🚫 FOCUS ONLY SITE' : '💡 FOCUS TIP'}</div>
+        <div class="tip-content" id="focus-tip">${blockData.reason === 'focus_mode' ? 'This site is not in your Focus Whitelist. Stay focused on your goals!' : blockData.reason === 'focus_only_site' ? 'This site is only accessible during Focus Mode. Start a focus session to access it.' : 'Did you know? It takes average 23 minutes to regain full focus after a single distraction.'}</div>
       </div>
       <div class="privacy-link-wrap">
         <a href="${chrome.runtime.getURL('privacy.html')}" target="_blank" class="privacy-link">Privacy Policy</a>
@@ -893,6 +908,33 @@ async function isBlockedUrl() {
   const url = window.location.href.toLowerCase();
   const settings = await getSettings();
   
+  // 1. Focus Mode Logic
+  const focusSession = settings.focusSession || {};
+  if (focusSession.active && !focusSession.paused) {
+    // During Focus Mode: Only allow Whitelisted sites
+    const whitelist = settings.focusWhitelist || [];
+    const isWhitelisted = whitelist.some(site => url.includes(site.toLowerCase()));
+    
+    // Always allow the dashboard and essential domains
+    const isEssential = url.includes('localhost') || 
+                        url.includes('127.0.0.1') || 
+                        url.includes('focus-shield.vercel.app') ||
+                        url.startsWith('chrome://') ||
+                        url.startsWith('about:');
+
+    if (!isWhitelisted && !isEssential) {
+      return { blocked: true, reason: 'focus_mode' };
+    }
+    return { blocked: false };
+  }
+
+  // 2. Disabled outside Focus Mode logic (for focusWhitelist items)
+  const focusWhitelist = settings.focusWhitelist || [];
+  if (focusWhitelist.some(site => url.includes(site.toLowerCase()))) {
+    // If it's a focus-only site and we are NOT focusing, block it.
+    return { blocked: true, reason: 'focus_only_site' };
+  }
+
   if (settings.isBlockingEnabled === false) return false;
   
   let allBlockedSites = [...(settings.blockedSites || [])];
@@ -946,7 +988,7 @@ async function isBlockedUrl() {
   }
 
   const validKeywords = keywords.filter(kw => kw.trim().length > 0);
-  
+  if (validKeywords.length > 0) {
     const normalizedUrl = url.toLowerCase();
     // Check keywords in URL
     isBlocked = validKeywords.some(kw => {
@@ -1000,6 +1042,7 @@ async function isBlockedUrl() {
     }
     return { blocked: false };
   }
+}
 
 
 // Helper to record blocked attempts
@@ -1028,7 +1071,7 @@ async function manageViewing() {
     if (!existingBlocker) {
       // Pause all videos immediately
       document.querySelectorAll("video").forEach(v => v.pause());
-      createSandglassTimer();
+      createSandglassTimer(result);
       recordBlockedAttempt(result.reason, result.category);
     }
   } else if (existingBlocker) {

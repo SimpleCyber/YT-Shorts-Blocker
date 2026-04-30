@@ -13,6 +13,12 @@ export interface FocusData {
   blockedSites: string[];
   usageLimits: { domain: string; limitMinutes: number }[];
   isBlockingEnabled: boolean;
+  isWhitelistMode: boolean;
+  focusWhitelist: string[];
+  focusSession: any;
+  schedule: {
+    enabled: boolean;
+  };
   settings: Record<string, any>;
   [key: string]: any;
 }
@@ -49,10 +55,14 @@ export async function loadData(uid: string): Promise<FocusData> {
     try {
       const extData = await getExtensionData() as any;
       if (extData && Object.keys(extData).length > 0) {
-          const formattedData = {
+          const formattedData: FocusData = {
               blockedSites: extData.blockedSites || DEFAULTS.blockedSites,
               usageLimits: extData.usageLimits || DEFAULTS.usageLimits,
               isBlockingEnabled: extData.isBlockingEnabled !== false,
+              isWhitelistMode: extData.isWhitelistMode || DEFAULTS.isWhitelistMode,
+              focusWhitelist: extData.focusWhitelist || DEFAULTS.focusWhitelist,
+              focusSession: extData.focusSession || DEFAULTS.focusSession,
+              schedule: extData.schedule || DEFAULTS.schedule,
               settings: extData.settings || {},
           };
           localStorage.setItem(`${LOCAL_STORAGE_KEY}_${uid}`, JSON.stringify(formattedData));
@@ -68,6 +78,10 @@ export async function loadData(uid: string): Promise<FocusData> {
     blockedSites: DEFAULTS.blockedSites,
     usageLimits: DEFAULTS.usageLimits,
     isBlockingEnabled: DEFAULTS.isBlockingEnabled,
+    isWhitelistMode: DEFAULTS.isWhitelistMode,
+    focusWhitelist: DEFAULTS.focusWhitelist,
+    focusSession: DEFAULTS.focusSession,
+    schedule: DEFAULTS.schedule,
     settings: {},
   };
 }

@@ -231,6 +231,11 @@ body {
     color: white;
 }
 
+.btn-danger {
+    background: var(--danger);
+    color: white;
+}
+
 .btn-outline {
     background: transparent;
     border: 1px solid var(--border);
@@ -250,7 +255,7 @@ body {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 12px;
-    overflow: hidden;
+    overflow: visible;
     margin-top: 24px;
 }
 
@@ -911,4 +916,192 @@ input:checked + .slider:before {
     left: -12px;
     border-color: transparent rgba(30, 41, 59, 0.95) transparent transparent;
     transform: rotate(0);
+}
+
+/* Focus Mode Enhanced Layout */
+.focus-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.focus-timer-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    min-height: 450px;
+}
+
+.focus-status {
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--primary);
+    margin-bottom: 24px;
+}
+
+.focus-whitelist-card {
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+}
+
+.card-header-with-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.info-tooltip-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.info-icon {
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: help;
+}
+
+.focus-tooltip-content {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    width: 200px;
+    line-height: 1.4;
+    text-align: center;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    z-index: 100;
+}
+
+.focus-tooltip-content::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: #1e293b transparent transparent transparent;
+}
+
+.info-tooltip-wrapper:hover .focus-tooltip-content {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-5px);
+}
+
+.whitelist-input-group {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.input-main {
+    flex: 1;
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.input-main:focus {
+    border-color: var(--primary);
+}
+
+.whitelist-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.whitelist-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: var(--bg-hover);
+    border-radius: 10px;
+    transition: transform 0.2s;
+}
+
+.whitelist-item:hover {
+    transform: translateX(4px);
+}
+
+.site-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.site-info img {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+}
+
+.site-info span {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.btn-remove {
+    color: var(--text-muted);
+    transition: color 0.2s;
+}
+
+.btn-remove:hover {
+    color: var(--danger);
+}
+
+.error-text {
+    color: var(--danger);
+    font-size: 12px;
+    margin-bottom: 12px;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    color: var(--text-muted);
+    gap: 12px;
+    opacity: 0.6;
+}
+
+.empty-state i {
+    font-size: 32px;
+}
+
+.empty-state p {
+    font-size: 14px;
+}
+
+@media (max-width: 900px) {
+    .focus-grid {
+        grid-template-columns: 1fr;
+    }
 }

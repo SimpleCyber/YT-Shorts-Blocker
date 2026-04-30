@@ -9,6 +9,7 @@
     --border: #e2e8f0;
     --danger: #ef4444;
     --danger-bg: #fee2e2;
+    --success: #22c55e;
 }
 
 * {
@@ -298,7 +299,7 @@ body {
 }
 
 .timer-time {
-    font-size: 40px;
+    font-size: 32px;
     font-weight: 700;
     color: var(--text-main);
     line-height: 1;
@@ -375,6 +376,36 @@ body {
     color: var(--text-dim);
     font-size: 15px;
     line-height: 1.5;
+}
+
+.insights-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.stat-box {
+    background: var(--bg-secondary);
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid var(--border);
+}
+
+.stat-box span {
+    display: block;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 4px;
+}
+
+.stat-box label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .insights-list {

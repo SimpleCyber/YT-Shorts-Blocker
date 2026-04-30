@@ -1,88 +1,147 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { getData, DEFAULTS } from "../../lib/extensionBridge";
+import React, { useState, useEffect, useCallback } from "react";
+import { useFocusData } from "../../lib/FocusDataContext";
+import { isExtensionAvailable, startFocus, pauseFocus, resetFocus } from "../../lib/extensionBridge";
 
 const TIMER_FULL_DASH = 251.2;
 
 export default function FocusMode() {
-  const [focusTimeLeft, setFocusTimeLeft] = useState(DEFAULTS.focusDuration);
-  const [isRunning, setIsRunning] = useState(false);
-  const [blockCount, setBlockCount] = useState(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const { data, updateData } = useFocusData();
+  const [newWhitelistSite, setNewWhitelistSite] = useState("");
+  const [siteError, setSiteError] = useState("");
 
-  const loadBlockCount = useCallback(async () => {
-    try {
-      const result = await getData(["blockedSites", "blockedCategories", "blockedKeywords"]);
-      const sites = (result.blockedSites as string[]) || [];
-      const cats = (result.blockedCategories as string[]) || [];
-      const kws = (result.blockedKeywords as string[]) || [];
-      setBlockCount(sites.length + cats.length + (kws.length > 0 ? 1 : 0));
-    } catch { /* extension not available */ }
-  }, []);
+  const session = data.focusSession;
+  const isRunning = session.active && !session.paused;
 
-  useEffect(() => { loadBlockCount(); }, [loadBlockCount]);
-
-  useEffect(() => {
-    if (isRunning) {
-      intervalRef.current = setInterval(() => {
-        setFocusTimeLeft((prev) => {
-          if (prev <= 0) {
-            clearInterval(intervalRef.current!);
-            setIsRunning(false);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [isRunning]);
-
-  const mins = Math.floor(focusTimeLeft / 60);
-  const secs = focusTimeLeft % 60;
-  const progress = focusTimeLeft / DEFAULTS.focusDuration;
+  const mins = Math.floor(session.timeLeft / 60);
+  const secs = session.timeLeft % 60;
+  const progress = session.timeLeft / session.duration;
   const dashoffset = TIMER_FULL_DASH - progress * TIMER_FULL_DASH;
 
-  const handleToggle = () => setIsRunning((r) => !r);
+  const handleToggle = () => {
+    if (!isExtensionAvailable()) return;
+    
+    if (!session.active) {
+      startFocus(session.duration);
+    } else {
+      pauseFocus();
+    }
+  };
+
   const handleReset = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    setIsRunning(false);
-    setFocusTimeLeft(DEFAULTS.focusDuration);
+    if (!isExtensionAvailable()) return;
+    resetFocus();
+  };
+
+  const handleAddWhitelist = () => {
+    let site = newWhitelistSite.trim().toLowerCase();
+    site = site.replace(/^(https?:\/\/)?(www\.)?/, "").replace(/\/+$/, "");
+
+    if (!site) return;
+    if (data.focusWhitelist.includes(site)) {
+      setSiteError("Site already in whitelist");
+      return;
+    }
+
+    updateData({ focusWhitelist: [...data.focusWhitelist, site] });
+    setNewWhitelistSite("");
+    setSiteError("");
+  };
+
+  const handleRemoveWhitelist = (site: string) => {
+    updateData({ focusWhitelist: data.focusWhitelist.filter((s) => s !== site) });
   };
 
   return (
     <section id="view-focus-mode" className="view-section active">
       <h1 className="page-title">Focus Mode</h1>
       <p className="page-desc">
-        To focus on a task and be more productive use focus mode to set your work time and break intervals. Add sites to your block list to avoid distractions during a focus session
+        Reclaim your productivity with deep work sessions. When active, only your whitelisted sites will be accessible.
       </p>
 
-      <div className="card focus-container">
-        <div style={{ marginBottom: "24px", color: "var(--text-main)", fontWeight: 600 }}>
-          1 of 2 cycles | <span style={{ color: "var(--text-muted)" }}>Focus for 25 minutes</span>
-        </div>
+      <div className="focus-grid">
+        {/* Left Column: Timer */}
+        <div className="card focus-timer-card">
+          <div className="focus-status">
+            {session.active ? (session.paused ? "Session Paused" : "Focusing...") : "Ready to focus?"}
+          </div>
 
-        <div className="focus-timer">
-          <svg viewBox="0 0 100 100">
-            <circle className="focus-timer-bg" cx="50" cy="50" r="40"></circle>
-            <circle className="focus-timer-progress" cx="50" cy="50" r="40" strokeDasharray="251.2" strokeDashoffset={dashoffset}></circle>
-          </svg>
-          <div className="focus-time-display">
-            <div className="time-val">{`${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`}</div>
-            <div className="time-labels"><span>min</span><span>sec</span></div>
+          <div className="focus-timer">
+            <svg viewBox="0 0 100 100">
+              <circle className="focus-timer-bg" cx="50" cy="50" r="40"></circle>
+              <circle 
+                className="focus-timer-progress" 
+                cx="50" 
+                cy="50" 
+                r="40" 
+                strokeDasharray="251.2" 
+                strokeDashoffset={dashoffset}
+                style={{ transition: 'stroke-dashoffset 1s linear' }}
+              ></circle>
+            </svg>
+            <div className="focus-time-display">
+              <div className="time-val">{`${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`}</div>
+              <div className="time-labels"><span>min</span><span>sec</span></div>
+            </div>
+          </div>
+
+          <div className="focus-controls">
+            <button className="btn btn-outline" onClick={handleReset} disabled={!session.active}>Reset</button>
+            <button 
+              className={`btn ${isRunning ? "btn-danger" : "btn-success"}`} 
+              onClick={handleToggle}
+            >
+              {session.active ? (session.paused ? "Resume" : "Pause") : "Start Focus"}
+            </button>
           </div>
         </div>
 
-        <p style={{ color: "var(--text-muted)", marginBottom: "24px" }}>
-          {blockCount > 0 ? `${blockCount} items in block list active` : "No sites in block list blocked"}
-        </p>
+        {/* Right Column: Whitelist */}
+        <div className="card focus-whitelist-card">
+          <div className="card-header-with-info">
+            <h3 className="card-title">Focus Whitelist</h3>
+            <div className="info-tooltip-wrapper">
+              <i className="fas fa-question-circle info-icon"></i>
+              <div className="focus-tooltip-content">
+                These sites will ONLY be accessible during Focus Mode and will otherwise be disabled.
+              </div>
+            </div>
+          </div>
 
-        <div className="focus-controls">
-          <button className="btn btn-outline" style={{ width: "100px", justifyContent: "center" }} onClick={handleReset}>Reset</button>
-          <button className={`btn ${isRunning ? "btn-outline" : "btn-success"}`} style={{ width: "100px", justifyContent: "center" }} onClick={handleToggle}>
-            {isRunning ? "Pause" : "Start"}
-          </button>
+          <div className="whitelist-input-group">
+            <input 
+              type="text" 
+              className="input-main" 
+              placeholder="e.g. docs.google.com" 
+              value={newWhitelistSite}
+              onChange={(e) => setNewWhitelistSite(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAddWhitelist()}
+            />
+            <button className="btn btn-primary" onClick={handleAddWhitelist}>Add</button>
+          </div>
+          {siteError && <div className="error-text">{siteError}</div>}
+
+          <div className="whitelist-list">
+            {data.focusWhitelist.length === 0 ? (
+              <div className="empty-state">
+                <i className="fas fa-list-ul"></i>
+                <p>No sites whitelisted for focus</p>
+              </div>
+            ) : (
+              data.focusWhitelist.map((site) => (
+                <div key={site} className="whitelist-item">
+                  <div className="site-info">
+                    <img src={`https://www.google.com/s2/favicons?domain=${site}&sz=32`} alt="" />
+                    <span>{site}</span>
+                  </div>
+                  <button className="btn-icon btn-remove" onClick={() => handleRemoveWhitelist(site)}>
+                    <i className="fas fa-trash"></i>
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </section>

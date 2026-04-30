@@ -29,6 +29,8 @@ const timerDisplay = document.getElementById('timer-display');
 const timerProgress = document.querySelector('.timer-progress');
 const btnTimerResume = document.getElementById('btn-timer-resume');
 const btnTimerReset = document.getElementById('btn-timer-reset');
+const focusStatusText = document.getElementById('focus-status-text');
+const focusProgressBars = document.getElementById('focus-progress-bars');
 
 // Insights Elements
 const insightsEmptyState = document.getElementById('insights-empty-state');
@@ -93,19 +95,51 @@ async function initBlockSites() {
                 iconWrapper.innerHTML = `<img src="https://www.google.com/s2/favicons?domain=${hostname}&sz=64" style="width: 32px; height: 32px; border-radius: 8px;" onerror="this.src='icon.png'">`;
             }
 
-            // Check if already blocked
-            chrome.storage.local.get(DEFAULTS, (result) => {
+            // Check if already blocked and enforce limits
+            chrome.storage.local.get(['blockedSites', 'authUser'], (result) => {
                 const blocked = result.blockedSites || [];
+                const user = result.authUser;
+                const isPremium = user?.plan?.toLowerCase() === "unlimited" || user?.plan?.toLowerCase() === "premium";
                 const isBlocked = blocked.some(site => currentDomain.includes(site));
                 
+                // Update Upgrade Banner
+                const upgradeBanner = document.getElementById('upgrade-banner');
+                if (upgradeBanner) {
+                    if (isPremium) {
+                        upgradeBanner.style.display = 'none';
+                    } else {
+                        const remaining = Math.max(0, 3 - blocked.length);
+                        const title = upgradeBanner.querySelector('.upgrade-title');
+                        if (title) {
+                            title.textContent = remaining === 0 
+                                ? "You've reached your limit of 3 sites." 
+                                : `${remaining} site${remaining === 1 ? '' : 's'} left to add to your block list.`;
+                        }
+                        upgradeBanner.style.display = 'block';
+                    }
+                }
+
                 if (isBlocked) {
                     btnBlockSite.textContent = "Site is Blocked";
                     btnBlockSite.style.backgroundColor = "var(--danger)";
+                    btnBlockSite.disabled = false;
+                    btnBlockSite.style.opacity = '1';
                     btnBlockSite.onclick = () => unblockSite(currentDomain, blocked);
                 } else {
-                    btnBlockSite.textContent = "Block this site";
-                    btnBlockSite.style.backgroundColor = "var(--primary)";
-                    btnBlockSite.onclick = () => blockSite(currentDomain, blocked);
+                    const limitReached = !isPremium && blocked.length >= 3;
+                    
+                    if (limitReached) {
+                        btnBlockSite.textContent = "Limit Reached (3/3)";
+                        btnBlockSite.style.backgroundColor = "var(--text-dim)";
+                        btnBlockSite.disabled = true;
+                        btnBlockSite.style.opacity = '0.5';
+                    } else {
+                        btnBlockSite.textContent = "Block this site";
+                        btnBlockSite.style.backgroundColor = "var(--primary)";
+                        btnBlockSite.disabled = false;
+                        btnBlockSite.style.opacity = '1';
+                        btnBlockSite.onclick = () => blockSite(currentDomain, blocked);
+                    }
                 }
             });
         }
@@ -117,9 +151,21 @@ async function initBlockSites() {
 
 function blockSite(domain, currentList) {
     if (!domain) return;
-    const updated = [...currentList, domain];
-    chrome.storage.local.set({ blockedSites: updated }, () => {
-        initBlockSites(); // Refresh UI
+    
+    // Safety check for limits
+    chrome.storage.local.get(['authUser'], (result) => {
+        const user = result.authUser;
+        const isPremium = user?.plan?.toLowerCase() === "unlimited" || user?.plan?.toLowerCase() === "premium";
+        
+        if (!isPremium && currentList.length >= 3) {
+            alert("You've reached the limit of 3 blocked sites for the free plan.");
+            return;
+        }
+
+        const updated = [...currentList, domain];
+        chrome.storage.local.set({ blockedSites: updated }, () => {
+            initBlockSites(); // Refresh UI
+        });
     });
 }
 
@@ -131,75 +177,96 @@ function unblockSite(domain, currentList) {
     });
 }
 
-// Focus Mode Logic (Simple localized timer for mockup purposes)
-// In a real app, this should sync with background.js to survive popup closing
-let focusTimeLeft = 5 * 60; // 5 minutes in seconds
-let isTimerRunning = false;
+// Focus Mode Logic (Sync with background.js)
 const TIMER_FULL_DASH = 251.2;
 
-function updateTimerDisplay() {
-    const hrs = Math.floor(focusTimeLeft / 3600);
-    const mins = Math.floor((focusTimeLeft % 3600) / 60);
-    const secs = focusTimeLeft % 60;
+async function updateTimerDisplay() {
+    const data = await chrome.storage.local.get(['focusSession']);
+    const session = data.focusSession || {
+        active: false,
+        paused: false,
+        duration: 25 * 60,
+        timeLeft: 25 * 60,
+        type: 'focus'
+    };
+
+    const timeLeft = session.timeLeft;
+    const hrs = Math.floor(timeLeft / 3600);
+    const mins = Math.floor((timeLeft % 3600) / 60);
+    const secs = timeLeft % 60;
     
     timerDisplay.textContent = 
         `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         
     // Update SVG circle
-    const progress = focusTimeLeft / (5 * 60);
+    const progress = timeLeft / session.duration;
     const dashoffset = TIMER_FULL_DASH - (progress * TIMER_FULL_DASH);
     timerProgress.style.strokeDashoffset = dashoffset;
+
+    // Update buttons
+    if (session.active) {
+        btnTimerResume.textContent = session.paused ? "Resume" : "Pause";
+        btnTimerResume.style.backgroundColor = session.paused ? "var(--success)" : "var(--danger)";
+        btnTimerReset.disabled = false;
+        btnTimerReset.style.opacity = "1";
+        focusStatusText.textContent = session.paused ? "Session Paused" : "Focusing...";
+    } else {
+        btnTimerResume.textContent = "Start Focus";
+        btnTimerResume.style.backgroundColor = "var(--success)";
+        btnTimerReset.disabled = true;
+        btnTimerReset.style.opacity = "0.5";
+        focusStatusText.textContent = "Ready to focus?";
+    }
 }
 
-btnTimerResume.addEventListener('click', () => {
-    isTimerRunning = !isTimerRunning;
-    if (isTimerRunning) {
-        btnTimerResume.textContent = "Pause";
-        btnTimerResume.style.backgroundColor = "var(--danger)";
-        timerInterval = setInterval(() => {
-            if (focusTimeLeft > 0) {
-                focusTimeLeft--;
-                updateTimerDisplay();
-                // Optionally save state to storage
-                chrome.storage.local.set({ focusTimerState: focusTimeLeft });
-            } else {
-                clearInterval(timerInterval);
-                isTimerRunning = false;
-                btnTimerResume.textContent = "Resume";
-                btnTimerResume.style.backgroundColor = "var(--primary)";
-            }
-        }, 1000);
+btnTimerResume.addEventListener('click', async () => {
+    const data = await chrome.storage.local.get(['focusSession']);
+    const session = data.focusSession || { active: false, duration: 25 * 60 };
+    
+    if (!session.active) {
+        chrome.runtime.sendMessage({ action: "START_FOCUS", duration: session.duration });
     } else {
-        btnTimerResume.textContent = "Resume";
-        btnTimerResume.style.backgroundColor = "var(--primary)";
-        clearInterval(timerInterval);
+        chrome.runtime.sendMessage({ action: "PAUSE_FOCUS" });
     }
 });
 
 btnTimerReset.addEventListener('click', () => {
-    clearInterval(timerInterval);
-    isTimerRunning = false;
-    focusTimeLeft = 5 * 60;
-    btnTimerResume.textContent = "Resume";
-    btnTimerResume.style.backgroundColor = "var(--primary)";
-    updateTimerDisplay();
+    chrome.runtime.sendMessage({ action: "RESET_FOCUS" });
 });
 
 // Insights Logic
-function initInsights() {
-    const today = new Date().toISOString().split('T')[0];
-    const key = `insights_${today}`;
-    
-    chrome.storage.local.get([key], (result) => {
-        const data = result[key] || {};
+function updateInsightsDisplay() {
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const insightKey = `insights_${dateStr}`;
+    const statsKey = `stats_${dateStr}`;
+
+    chrome.storage.local.get([insightKey, statsKey], (result) => {
+        const data = result[insightKey] || {};
+        const stats = result[statsKey] || {};
+        
+        const insightsEmptyState = document.getElementById('insights-empty-state');
+        const insightsDataState = document.getElementById('insights-data-state');
+        const insightsStats = document.getElementById('insights-stats');
+        
+        const statTimeSaved = document.getElementById('stat-time-saved');
+        const statBlockedAttempts = document.getElementById('stat-blocked-attempts');
+
+        // Update Stats
+        const blockedCount = stats.blockedAttempts || 0;
+        if (statTimeSaved) statTimeSaved.textContent = `${blockedCount * 2}m`;
+        if (statBlockedAttempts) statBlockedAttempts.textContent = blockedCount;
+        
         const domains = Object.keys(data);
         
-        if (domains.length === 0) {
+        if (domains.length === 0 && blockedCount === 0) {
             insightsEmptyState.style.display = 'block';
             insightsDataState.style.display = 'none';
+            if (insightsStats) insightsStats.style.display = 'none';
         } else {
             insightsEmptyState.style.display = 'none';
             insightsDataState.style.display = 'flex';
+            if (insightsStats) insightsStats.style.display = 'grid';
             
             // Sort domains by time spent
             domains.sort((a, b) => data[b] - data[a]);
@@ -247,7 +314,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // Init App
             initBlockSites();
             updateTimerDisplay();
-            initInsights();
+            updateInsightsDisplay();
+
+            const btnEditList = document.getElementById('btn-edit-list');
+            if (btnEditList) {
+                btnEditList.addEventListener('click', () => {
+                    chrome.tabs.create({ url: 'http://localhost:3000/dashboard' });
+                });
+            }
 
             // Handle Feature Visibility from Admin
             chrome.storage.local.get(['ext_blockSites', 'ext_focusMode', 'ext_insights'], (flags) => {
@@ -271,9 +345,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             // Check if there was a running timer state
-            chrome.storage.local.get(['focusTimerState'], (timerResult) => {
-                if (timerResult.focusTimerState !== undefined) {
-                    focusTimeLeft = timerResult.focusTimerState;
+            updateTimerDisplay();
+            
+            // Listen for storage changes to update UI in real-time
+            chrome.storage.onChanged.addListener((changes) => {
+                if (changes.focusSession || changes.authUser) {
                     updateTimerDisplay();
                 }
             });

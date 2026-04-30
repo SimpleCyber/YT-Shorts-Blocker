@@ -164,7 +164,7 @@ export default function BlockSites({ isAdminUnlocked, showUpgrade, onOpenModal }
               <>
                 <strong>Limit reached!</strong> If you want to add more, you have to upgrade.{" "}
                 <span style={{ color: "var(--text-muted)" }}>
-                  Enjoy unlimited sites and categories with FocusShield Unlimited.
+                  Block unlimited sites with FocusShield Unlimited.
                 </span>
               </>
             )}

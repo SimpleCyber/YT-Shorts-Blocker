@@ -31,6 +31,18 @@ const handleMessage = function(request, sender, sendResponse) {
             sendResponse({ success: true });
         });
         return true;
+    } else if (request.action === "START_FOCUS") {
+        startFocusMode(request.duration);
+        sendResponse({ success: true });
+        return true;
+    } else if (request.action === "PAUSE_FOCUS") {
+        pauseFocusMode();
+        sendResponse({ success: true });
+        return true;
+    } else if (request.action === "RESET_FOCUS") {
+        resetFocusMode();
+        sendResponse({ success: true });
+        return true;
     }
 };
 
@@ -141,7 +153,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local') return;
 
     // Relevant keys for the dashboard
-    const syncKeys = ['blockedSites', 'blockedCategories', 'blockedKeywords', 'usageLimits', 'isBlockingEnabled', 'isWhitelistMode', 'settings', 'ext_blockSites', 'ext_focusMode', 'ext_insights'];
+    const syncKeys = ['blockedSites', 'blockedCategories', 'blockedKeywords', 'usageLimits', 'isBlockingEnabled', 'isWhitelistMode', 'focusWhitelist', 'focusSession', 'settings', 'ext_blockSites', 'ext_focusMode', 'ext_insights'];
     const hasSyncChange = Object.keys(changes).some(key => syncKeys.includes(key));
 
     if (hasSyncChange) {
@@ -175,5 +187,106 @@ chrome.storage.onChanged.addListener((changes, area) => {
                   .catch(err => console.error('Cloud Sync Failed:', err));
             }
         });
+    }
+});
+
+// Focus Mode Logic
+let focusInterval = null;
+
+async function startFocusMode(duration) {
+    const session = {
+        active: true,
+        paused: false,
+        startTime: Date.now(),
+        endTime: Date.now() + (duration * 1000),
+        duration: duration,
+        timeLeft: duration,
+        type: 'focus'
+    };
+    
+    await chrome.storage.local.set({ focusSession: session });
+    startFocusInterval();
+}
+
+async function pauseFocusMode() {
+    const data = await chrome.storage.local.get(['focusSession']);
+    if (data.focusSession && data.focusSession.active) {
+        const session = data.focusSession;
+        session.paused = !session.paused;
+        if (session.paused) {
+            stopFocusInterval();
+        } else {
+            session.endTime = Date.now() + (session.timeLeft * 1000);
+            startFocusInterval();
+        }
+        await chrome.storage.local.set({ focusSession: session });
+    }
+}
+
+async function resetFocusMode() {
+    stopFocusInterval();
+    const data = await chrome.storage.local.get(['focusSession']);
+    const duration = data.focusSession?.duration || 25 * 60;
+    const session = {
+        active: false,
+        paused: false,
+        startTime: null,
+        endTime: null,
+        duration: duration,
+        timeLeft: duration,
+        type: 'focus'
+    };
+    await chrome.storage.local.set({ focusSession: session });
+    chrome.action.setBadgeText({ text: '' });
+}
+
+function startFocusInterval() {
+    if (focusInterval) clearInterval(focusInterval);
+    focusInterval = setInterval(async () => {
+        const data = await chrome.storage.local.get(['focusSession']);
+        const session = data.focusSession;
+        
+        if (!session || !session.active || session.paused) {
+            stopFocusInterval();
+            return;
+        }
+        
+        const now = Date.now();
+        const timeLeft = Math.max(0, Math.round((session.endTime - now) / 1000));
+        
+        if (timeLeft !== session.timeLeft) {
+            session.timeLeft = timeLeft;
+            await chrome.storage.local.set({ focusSession: session });
+            
+            // Update Badge
+            const mins = Math.ceil(timeLeft / 60);
+            chrome.action.setBadgeText({ text: timeLeft > 0 ? `${mins}m` : 'Done' });
+            chrome.action.setBadgeBackgroundColor({ color: timeLeft > 0 ? '#6366f1' : '#10b981' });
+        }
+        
+        if (timeLeft <= 0) {
+            stopFocusInterval();
+            // Optional: Notification
+            chrome.notifications.create({
+                type: 'basic',
+                iconUrl: 'icon.png',
+                title: 'Focus Session Complete!',
+                message: 'Time to take a break.'
+            });
+        }
+    }, 1000);
+}
+
+function stopFocusInterval() {
+    if (focusInterval) {
+        clearInterval(focusInterval);
+        focusInterval = null;
+    }
+}
+
+// Initialize timer on load if session is active
+chrome.storage.local.get(['focusSession'], (data) => {
+    if (data.focusSession && data.focusSession.active && !data.focusSession.paused) {
+        startFocusInterval();
     }
 });

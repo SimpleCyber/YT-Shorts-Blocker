@@ -1,5 +1,15 @@
 // Extension Bridge — communicates with the FocusShield extension via window.postMessage
 
+export interface FocusSession {
+  active: boolean;
+  paused: boolean;
+  startTime: number | null;
+  endTime: number | null;
+  duration: number;
+  timeLeft: number;
+  type: 'focus' | 'break';
+}
+
 /**
  * Check if the FocusShield extension is reachable.
  * With the postMessage bridge, we'll assume it's available if window exists,
@@ -93,12 +103,49 @@ export function setData(data: Record<string, unknown>): Promise<{ success: boole
   });
 }
 
+/**
+ * Start a focus session.
+ */
+export function startFocus(duration: number): void {
+  console.log("FocusShield: Starting focus session", duration);
+  window.postMessage({ 
+    type: "FOCUS_SHIELD_SYNC", 
+    payload: { action: "START_FOCUS", duration } 
+  }, "*");
+}
+
+export function pauseFocus(): void {
+  console.log("FocusShield: Toggling pause/resume");
+  window.postMessage({ 
+    type: "FOCUS_SHIELD_SYNC", 
+    payload: { action: "PAUSE_FOCUS" } 
+  }, "*");
+}
+
+export function resetFocus(): void {
+  console.log("FocusShield: Resetting focus session");
+  window.postMessage({ 
+    type: "FOCUS_SHIELD_SYNC", 
+    payload: { action: "RESET_FOCUS" } 
+  }, "*");
+}
+
 // Default values matching options.js
 export const DEFAULTS = {
   blockedSites: ["youtube.com/shorts", "instagram.com/reels"],
   blockedCategories: [] as string[],
   blockedKeywords: [] as string[],
   focusDuration: 25 * 60,
+  focusWhitelist: [] as string[],
+  focusSession: {
+    active: false,
+    paused: false,
+    startTime: null,
+    endTime: null,
+    duration: 25 * 60,
+    timeLeft: 25 * 60,
+    type: 'focus'
+  } as FocusSession,
   isBlockingEnabled: true,
   isWhitelistMode: false,
   usageLimits: [] as { domain: string; limitMinutes: number }[],

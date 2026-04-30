@@ -48,7 +48,7 @@
             </div>
             
             <button class="btn-primary" id="btn-block-site">Block this site</button>
-            <button class="btn-secondary" id="btn-edit-list">Edit block list</button>
+            <button class="btn-secondary" id="btn-edit-list">Manage all blocked sites</button>
 
             <div class="upgrade-banner" id="upgrade-banner">
                 <i class="fas fa-times upgrade-close" id="close-banner"></i>
@@ -60,12 +60,12 @@
         <!-- Tab 2: Focus Mode -->
         <section id="tab-focus" class="tab-content">
             <div class="focus-header">
-                <div class="focus-progress">
+                <div class="focus-progress" id="focus-progress-bars">
                     <div class="progress-bar active"></div>
                     <div class="progress-bar"></div>
                 </div>
-                <div class="focus-status">
-                    1 of 2 cycles | <span>Break for 5 minutes</span>
+                <div class="focus-status" id="focus-status-text">
+                    Ready to focus?
                 </div>
             </div>
 
@@ -105,6 +105,17 @@
                 </div>
                 <h3 class="insights-empty-title">No insights yet. Try again in 24 hours.</h3>
                 <p class="insights-empty-desc">We're still calculating your insights, please check back soon for updates!</p>
+            </div>
+
+            <div id="insights-stats" class="insights-stats-grid" style="display: none; margin-bottom: 24px;">
+                <div class="stat-box">
+                    <span id="stat-time-saved">0m</span>
+                    <label>Time Saved</label>
+                </div>
+                <div class="stat-box">
+                    <span id="stat-blocked-attempts">0</span>
+                    <label>Blocked</label>
+                </div>
             </div>
 
             <div id="insights-data-state" class="insights-list">

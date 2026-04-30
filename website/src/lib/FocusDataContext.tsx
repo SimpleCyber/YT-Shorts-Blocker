@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { doc, getDoc, setDoc, onSnapshot, DocumentSnapshot } from "firebase/firestore";
 import { db } from "./firebase";
 import { useAuth } from "./AuthContext";
-import { DEFAULTS, isExtensionAvailable, setData as setExtensionData, getData as getExtensionData } from "./extensionBridge";
+import { DEFAULTS, isExtensionAvailable, setData as setExtensionData, getData as getExtensionData, FocusSession } from "./extensionBridge";
 
 export interface FocusData {
   blockedSites: string[];
@@ -13,6 +13,8 @@ export interface FocusData {
   isWhitelistMode: boolean;
   isBlockingEnabled: boolean;
   usageLimits: { domain: string; limitMinutes: number }[];
+  focusWhitelist: string[];
+  focusSession: FocusSession;
   schedule: {
     enabled: boolean;
     intervals: { id: string; start: string; end: string }[];
@@ -50,6 +52,8 @@ export function FocusDataProvider({ children }: { children: React.ReactNode }) {
     isWhitelistMode: false,
     isBlockingEnabled: true,
     usageLimits: [],
+    focusWhitelist: [],
+    focusSession: DEFAULTS.focusSession,
     schedule: DEFAULTS.schedule,
     settings: {},
   });
