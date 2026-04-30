@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useFocusData } from "../../lib/FocusDataContext";
+import { usePasswordPrompt } from "../../lib/PasswordPromptContext";
 import { FREE_LIMIT } from "../../lib/extensionBridge";
 
 interface UsageLimitItem {
@@ -221,16 +222,31 @@ export default function UsageLimit({ isAdminUnlocked, showUpgrade, onOpenModal }
     return () => clearInterval(interval);
   }, [loadDayData]);
 
+  const { requirePassword } = usePasswordPrompt();
+
   const deleteItem = (index: number) => {
-    const updated = [...usageLimits];
-    updated.splice(index, 1);
-    updateData({ usageLimits: updated });
+    requirePassword(() => {
+      const updated = [...usageLimits];
+      updated.splice(index, 1);
+      updateData({ usageLimits: updated });
+    });
   };
 
   const updateLimit = (index: number, value: number) => {
-    const updated = [...usageLimits];
-    updated[index] = { ...updated[index], limitMinutes: value };
-    updateData({ usageLimits: updated });
+    // If making it MORE restrictive (decreasing limit), it's fine. 
+    // If making it LESS restrictive (increasing limit), require password.
+    const currentLimit = usageLimits[index].limitMinutes;
+    if (value === 0 || (currentLimit !== 0 && value > currentLimit)) {
+      requirePassword(() => {
+        const updated = [...usageLimits];
+        updated[index] = { ...updated[index], limitMinutes: value };
+        updateData({ usageLimits: updated });
+      });
+    } else {
+      const updated = [...usageLimits];
+      updated[index] = { ...updated[index], limitMinutes: value };
+      updateData({ usageLimits: updated });
+    }
   };
 
   const minuteSteps = [5, 10, 20, 25, 30, 35, 40, 45, 50, 55, 60];

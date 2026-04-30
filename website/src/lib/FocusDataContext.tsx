@@ -20,6 +20,10 @@ export interface FocusData {
     intervals: { id: string; start: string; end: string }[];
     days: string[];
   };
+  passwordProtection: {
+    enabled: boolean;
+    passwordHash: string;
+  };
   settings: Record<string, any>;
   lastSynced?: number;
   [key: string]: any;

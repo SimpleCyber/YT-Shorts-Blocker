@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { usePasswordPrompt } from "../../lib/PasswordPromptContext";
 
 interface SidebarProps {
   activeView: string;
@@ -39,6 +40,17 @@ export default function Sidebar({
   userInitial,
   signOutUser,
 }: SidebarProps) {
+  const { requirePassword } = usePasswordPrompt();
+
+  const handleBlockingToggle = (enabled: boolean) => {
+    // If turning OFF, require password. If turning ON, it's fine.
+    if (!enabled) {
+      requirePassword(() => onBlockingToggle(enabled));
+    } else {
+      onBlockingToggle(enabled);
+    }
+  };
+
   const navItems = [
     { id: "view-block-sites", icon: "fa-th-large", label: "Block Sites", visible: featureFlags?.blockSites !== false },
     { id: "view-usage-limit", icon: "fa-hourglass-half", label: "Usage Limit", visible: featureFlags?.usageLimit !== false },
@@ -132,7 +144,7 @@ export default function Sidebar({
                 <input
                   type="checkbox"
                   checked={isBlockingEnabled}
-                  onChange={(e) => onBlockingToggle(e.target.checked)}
+                  onChange={(e) => handleBlockingToggle(e.target.checked)}
                 />
                 <span className="slider"></span>
               </label>

@@ -154,6 +154,10 @@ export const DEFAULTS = {
     intervals: [{ id: "1", start: "09:00", end: "17:00" }],
     days: ["Mon", "Tue", "Wed", "Thu", "Fri"],
   },
+  passwordProtection: {
+    enabled: false,
+    passwordHash: "",
+  },
 };
 
 export const ADULT_KEYWORDS = [

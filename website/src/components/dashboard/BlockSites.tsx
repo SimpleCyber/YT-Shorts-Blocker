@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { getData, setData, DEFAULTS, MODAL_CATEGORIES, ADULT_KEYWORDS, FREE_LIMIT } from "../../lib/extensionBridge";
 import { useFocusData } from "../../lib/FocusDataContext";
+import { usePasswordPrompt } from "../../lib/PasswordPromptContext";
 import ScheduleModal from "./ScheduleModal";
 
 interface BlockSitesProps {
@@ -15,21 +16,30 @@ export default function BlockSites({ isAdminUnlocked, showUpgrade, onOpenModal }
   const { data, updateData } = useFocusData();
   const { blockedSites, blockedCategories, blockedKeywords, isWhitelistMode } = data;
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const { requirePassword } = usePasswordPrompt();
 
   const deleteSite = (site: string) => {
-    updateData({ blockedSites: blockedSites.filter((s) => s !== site) });
+    requirePassword(() => {
+      updateData({ blockedSites: blockedSites.filter((s) => s !== site) });
+    });
   };
 
   const deleteCategory = (catId: string) => {
-    updateData({ blockedCategories: blockedCategories.filter((c) => c !== catId) });
+    requirePassword(() => {
+      updateData({ blockedCategories: blockedCategories.filter((c) => c !== catId) });
+    });
   };
 
   const deleteKeywords = () => {
-    updateData({ blockedKeywords: [] });
+    requirePassword(() => {
+      updateData({ blockedKeywords: [] });
+    });
   };
 
   const toggleWhitelist = (checked: boolean) => {
-    updateData({ isWhitelistMode: checked });
+    requirePassword(() => {
+      updateData({ isWhitelistMode: checked });
+    });
   };
 
   const totalItems = blockedSites.length + blockedCategories.length + (blockedKeywords.length > 0 ? 1 : 0);

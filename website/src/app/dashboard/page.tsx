@@ -13,6 +13,7 @@ import Settings from "../../components/dashboard/Settings";
 import DashboardPrivacy from "../../components/dashboard/DashboardPrivacy";
 import AddBlockModal from "../../components/dashboard/AddBlockModal";
 import ThemeToggle from "../../components/dashboard/ThemeToggle";
+import PasswordProtection from "../../components/dashboard/PasswordProtection";
 import { doc, getDoc, onSnapshot, DocumentSnapshot } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { FocusData, useFocusData } from "../../lib/FocusDataContext";
@@ -145,21 +146,7 @@ export default function DashboardPage() {
       case "view-privacy":
         return <DashboardPrivacy />;
       case "view-password":
-        return (
-          <section className="view-section active">
-            <h1 className="page-title">Password Protection</h1>
-            <p className="page-desc">Protect your focus by requiring a password to change settings or unblock sites.</p>
-            <div className="card" style={{ textAlign: "center", padding: "60px 20px" }}>
-              <i className="fas fa-lock" style={{ fontSize: "48px", color: "var(--primary)", marginBottom: "20px" }}></i>
-              <h3>{isUnlimited ? "Feature Unlocked" : "Premium Feature"}</h3>
-              <p style={{ color: "var(--text-muted)", marginTop: "12px" }}>
-                {isUnlimited 
-                  ? "This feature is active. Functionality will be expanded in future updates." 
-                  : "This feature is locked. Please upgrade to Unlimited plan to enable password protection."}
-              </p>
-            </div>
-          </section>
-        );
+        return <PasswordProtection isAdminUnlocked={isUnlimited} />;
       case "view-custom-page":
         return (
           <section className="view-section active">
