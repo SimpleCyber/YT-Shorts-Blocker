@@ -23,6 +23,7 @@ export interface FocusData {
   passwordProtection: {
     enabled: boolean;
     passwordHash: string;
+    lockUntil?: number | null;
   };
   settings: Record<string, any>;
   lastSynced?: number;

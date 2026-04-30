@@ -6,6 +6,9 @@ import {
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  sendSignInLinkToEmail,
+  isSignInWithEmailLink,
+  signInWithEmailLink,
   signOut as firebaseSignOut,
   updateProfile,
   User,
@@ -29,8 +32,11 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, name: string) => Promise<void>;
+  sendFocusResetLink: (email: string) => Promise<void>;
   signOutUser: () => Promise<void>;
+  isResetMode: boolean;
 }
+
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -97,7 +103,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const [isResetMode, setIsResetMode] = useState(false);
+
   useEffect(() => {
+    // Check for email link
+    if (isSignInWithEmailLink(auth, window.location.href)) {
+      let email = window.localStorage.getItem('emailForSignIn');
+      if (!email) {
+        // Fallback for cross-device clicks
+        email = window.prompt('Please provide your email for confirmation');
+      }
+      
+      if (email) {
+        console.log("Attempting sign-in with email link for:", email);
+        signInWithEmailLink(auth, email, window.location.href)
+          .then(() => {
+            console.log("Successfully signed in with email link!");
+            window.localStorage.removeItem('emailForSignIn');
+            
+            // Check for reset mode
+            const url = new URL(window.location.href);
+            if (url.searchParams.get('mode') === 'reset-focus-password') {
+              console.log("Reset mode detected in AuthContext");
+              setIsResetMode(true);
+            }
+          })
+          .catch((error) => {
+            console.error("Error signing in with email link", error);
+          });
+      }
+    }
+
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         let photoBase64: string | null = null;
@@ -155,13 +191,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await saveUserToFirestore(result.user, null);
   };
 
+  const sendFocusResetLink = async (email: string) => {
+    const actionCodeSettings = {
+      url: `${window.location.origin}/dashboard?mode=reset-focus-password`,
+      handleCodeInApp: true,
+    };
+    await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+    window.localStorage.setItem('emailForSignIn', email);
+  };
+
   const signOutUser = async () => {
     syncAuthToExtension(null);
     await firebaseSignOut(auth);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOutUser }}>
+    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, sendFocusResetLink, signOutUser, isResetMode }}>
       {children}
     </AuthContext.Provider>
   );

@@ -2,20 +2,55 @@
 
 import React, { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
+import { checkIncognitoStatus, openExtensionSettings } from "../../lib/extensionBridge";
 
 export default function Settings() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [isIncognitoAllowed, setIsIncognitoAllowed] = useState(false);
+  const [showIncognitoModal, setShowIncognitoModal] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    // Initial check
+    checkIncognitoStatus().then(setIsIncognitoAllowed);
+    
+    // Check periodically or on focus
+    const handleFocus = () => {
+      checkIncognitoStatus().then(setIsIncognitoAllowed);
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, []);
+
+  const handleIncognitoClick = () => {
+    if (isIncognitoAllowed) {
+      // Already enabled, maybe show a "You're all set" message
+    } else {
+      setShowIncognitoModal(true);
+    }
+  };
 
   return (
     <section id="view-settings" className="view-section active">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
         <h1 className="page-title" style={{ margin: 0 }}>Settings</h1>
-        <button className="btn btn-outline" style={{ background: "var(--bg-hover)" }}>Enable in Incognito Mode</button>
+        <button 
+          className={`btn ${isIncognitoAllowed ? "btn-success" : "btn-outline"}`} 
+          style={{ 
+            background: isIncognitoAllowed ? "rgba(16, 185, 129, 0.1)" : "var(--bg-hover)",
+            color: isIncognitoAllowed ? "var(--success)" : "inherit",
+            borderColor: isIncognitoAllowed ? "var(--success)" : "var(--border)",
+            fontWeight: 700
+          }}
+          onClick={handleIncognitoClick}
+        >
+          {isIncognitoAllowed ? (
+            <><i className="fas fa-check-circle" style={{ marginRight: "8px" }}></i> Enabled in Incognito</>
+          ) : (
+            "Enable in Incognito Mode"
+          )}
+        </button>
       </div>
 
       <div className="settings-section">
@@ -99,6 +134,53 @@ export default function Settings() {
           <button className="btn-premium premium-element" style={{ width: "auto" }}>Go Unlimited</button>
         </div>
       </div>
+
+      {/* Incognito Instruction Modal */}
+      {showIncognitoModal && (
+        <div className="modal-overlay active" style={{ zIndex: 10000 }} onClick={() => setShowIncognitoModal(false)}>
+          <div 
+            className="card" 
+            style={{ width: "500px", maxWidth: "90vw", margin: "auto", padding: "32px", textAlign: "center" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "var(--bg-hover)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px auto" }}>
+              <i className="fas fa-user-secret" style={{ fontSize: "28px", color: "var(--primary)" }}></i>
+            </div>
+            <h2 style={{ fontSize: "22px", fontWeight: 700, marginBottom: "12px" }}>Enable Incognito Mode</h2>
+            <p style={{ color: "var(--text-muted)", fontSize: "14px", lineHeight: "1.6", marginBottom: "24px" }}>
+              To stay focused even in private windows, you need to manually grant the extension permission in your browser settings.
+            </p>
+            
+            <div style={{ textAlign: "left", background: "var(--bg-main)", padding: "20px", borderRadius: "12px", border: "1px solid var(--border)", marginBottom: "24px" }}>
+              <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
+                <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "var(--primary)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, flexShrink: 0 }}>1</div>
+                <div style={{ fontSize: "14px", fontWeight: 500 }}>Click the button below to open <b>Extension Settings</b>.</div>
+              </div>
+              <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
+                <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "var(--primary)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, flexShrink: 0 }}>2</div>
+                <div style={{ fontSize: "14px", fontWeight: 500 }}>Scroll down to find the <b>&quot;Allow in Incognito&quot;</b> toggle.</div>
+              </div>
+              <div style={{ display: "flex", gap: "12px" }}>
+                <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "var(--primary)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, flexShrink: 0 }}>3</div>
+                <div style={{ fontSize: "14px", fontWeight: 500 }}>Turn it <b>ON</b> and return to this dashboard.</div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "12px" }}>
+              <button className="btn btn-outline" style={{ flex: 1, justifyContent: "center" }} onClick={() => setShowIncognitoModal(false)}>Close</button>
+              <button 
+                className="btn btn-primary" 
+                style={{ flex: 2, justifyContent: "center", background: "var(--primary)", color: "white" }}
+                onClick={() => {
+                  openExtensionSettings();
+                }}
+              >
+                Open Extension Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

@@ -130,6 +130,29 @@ export function resetFocus(): void {
   }, "*");
 }
 
+export function checkIncognitoStatus(): Promise<boolean> {
+  return new Promise((resolve) => {
+    const actionType = "CHECK_INCOGNITO_" + Date.now();
+    const listener = (event: MessageEvent) => {
+      if (event.source !== window) return;
+      if (event.data && event.data.type === "FOCUS_SHIELD_SYNC_RESPONSE" && event.data.actionType === actionType) {
+        window.removeEventListener("message", listener);
+        resolve(event.data.response?.isAllowed || false);
+      }
+    };
+    window.addEventListener("message", listener);
+    window.postMessage({ type: "FOCUS_SHIELD_SYNC", actionType, payload: { action: "CHECK_INCOGNITO" } }, "*");
+    setTimeout(() => { window.removeEventListener("message", listener); resolve(false); }, 2000);
+  });
+}
+
+export function openExtensionSettings(): void {
+  window.postMessage({ 
+    type: "FOCUS_SHIELD_SYNC", 
+    payload: { action: "OPEN_EXT_SETTINGS" } 
+  }, "*");
+}
+
 // Default values matching options.js
 export const DEFAULTS = {
   blockedSites: ["youtube.com/shorts", "instagram.com/reels"],
@@ -157,6 +180,7 @@ export const DEFAULTS = {
   passwordProtection: {
     enabled: false,
     passwordHash: "",
+    lockUntil: null as number | null,
   },
 };
 

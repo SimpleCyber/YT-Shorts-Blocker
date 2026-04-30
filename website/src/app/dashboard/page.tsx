@@ -107,6 +107,20 @@ export default function DashboardPage() {
     if (user) loadInitialState();
   }, [loadInitialState, user]);
 
+  // Handle URL query parameters for view and reset mode
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const viewParam = url.searchParams.get('view');
+    const modeParam = url.searchParams.get('mode');
+    const triggerReset = url.searchParams.get('trigger-reset');
+
+    if (viewParam) {
+      setActiveView(viewParam);
+    } else if (modeParam === 'reset-focus-password' || triggerReset === 'true') {
+      setActiveView('view-password');
+    }
+  }, []);
+
   const handleBlockingToggle = (enabled: boolean) => {
     updateData({ isBlockingEnabled: enabled });
   };

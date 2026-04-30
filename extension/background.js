@@ -50,6 +50,15 @@ const handleMessage = function(request, sender, sendResponse) {
         resetFocusMode();
         sendResponse({ success: true });
         return true;
+    } else if (request.action === "CHECK_INCOGNITO") {
+        chrome.extension.isAllowedIncognitoAccess((isAllowed) => {
+            sendResponse({ isAllowed });
+        });
+        return true;
+    } else if (request.action === "OPEN_EXT_SETTINGS") {
+        chrome.tabs.create({ url: `chrome://extensions/?id=${chrome.runtime.id}` });
+        sendResponse({ success: true });
+        return true;
     }
 };
 

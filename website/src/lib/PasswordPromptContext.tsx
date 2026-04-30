@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useFocusData } from "./FocusDataContext";
 
 interface PasswordPromptContextType {
@@ -29,6 +29,10 @@ export const PasswordPromptProvider = ({ children }: { children: ReactNode }) =>
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const [passwordInput, setPasswordInput] = useState("");
   const [error, setError] = useState("");
+  const [timeLeftStr, setTimeLeftStr] = useState("");
+
+  const lockUntil = data.passwordProtection?.lockUntil || 0;
+  const isLocked = lockUntil > Date.now();
 
   const requirePassword = (action: () => void) => {
     if (data.passwordProtection?.enabled && data.passwordProtection?.passwordHash) {
@@ -41,8 +45,42 @@ export const PasswordPromptProvider = ({ children }: { children: ReactNode }) =>
     }
   };
 
+  // Countdown logic for the modal
+  useEffect(() => {
+    if (!isOpen || !isLocked) return;
+
+    const updateTimer = () => {
+      const now = Date.now();
+      const diff = lockUntil - now;
+
+      if (diff <= 0) {
+        setTimeLeftStr("");
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      if (days > 0) {
+        setTimeLeftStr(`${days} days and ${hours} hours remaining`);
+      } else if (hours > 0) {
+        setTimeLeftStr(`${hours} hours and ${minutes} minutes remaining`);
+      } else {
+        setTimeLeftStr(`${minutes} minutes and ${seconds} seconds remaining`);
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [isOpen, isLocked, lockUntil]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLocked) return; // Action is blocked
+
     const hash = await hashPassword(passwordInput);
     if (hash === data.passwordProtection?.passwordHash) {
       setIsOpen(false);
@@ -65,63 +103,102 @@ export const PasswordPromptProvider = ({ children }: { children: ReactNode }) =>
       {children}
       
       {isOpen && (
-        <div className="modal-overlay active" style={{ zIndex: 10000 }}>
-          <div className="card" style={{ width: "400px", maxWidth: "90vw", zIndex: 10001, margin: "auto" }}>
-            <div style={{ textAlign: "center", marginBottom: "20px" }}>
-              <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "var(--bg-hover)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px auto" }}>
-                <i className="fas fa-lock" style={{ fontSize: "20px", color: "var(--primary)" }}></i>
+        <div 
+          className="modal-overlay active" 
+          style={{ zIndex: 10000, cursor: "pointer" }}
+          onClick={handleCancel}
+        >
+          <div 
+            className="card" 
+            style={{ width: "450px", maxWidth: "90vw", zIndex: 10001, margin: "auto", cursor: "default" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ textAlign: "center", marginBottom: isLocked ? "0" : "20px" }}>
+              <div style={{ 
+                width: "48px", 
+                height: "48px", 
+                borderRadius: "50%", 
+                background: "var(--bg-hover)", 
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "center", 
+                margin: "0 auto 12px auto" 
+              }}>
+                <i className={`fas ${isLocked ? "fa-lock" : "fa-shield-alt"}`} style={{ fontSize: "20px", color: "var(--primary)" }}></i>
               </div>
-              <h3 style={{ margin: "0 0 8px 0" }}>Password Required</h3>
+              <h3 style={{ margin: "0 0 8px 0" }}>{isLocked ? "Action Locked" : "Password Required"}</h3>
               <p style={{ margin: 0, fontSize: "14px", color: "var(--text-muted)" }}>
-                This action is protected. Enter your password to continue.
+                {isLocked 
+                  ? "This action cannot be performed because you have locked your settings." 
+                  : "This action is protected. Enter your password to continue."
+                }
               </p>
             </div>
 
-            <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: "20px" }}>
-                <input
-                  type="password"
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
-                  placeholder="Enter your password"
-                  autoFocus
-                  style={{
-                    width: "100%",
-                    padding: "12px 16px",
-                    borderRadius: "8px",
-                    border: "1px solid var(--border)",
-                    background: "var(--bg-main)",
-                    color: "var(--text-main)",
-                    fontFamily: "inherit",
-                    fontSize: "14px"
-                  }}
-                  required
-                />
-                {error && (
-                  <p style={{ color: "var(--danger)", fontSize: "12px", marginTop: "8px", fontWeight: 600 }}>
-                    <i className="fas fa-exclamation-circle"></i> {error}
-                  </p>
-                )}
+            {isLocked ? (
+              <div style={{ textAlign: "center", padding: "20px 0 10px 0" }}>
+                <div style={{ fontSize: "20px", fontWeight: 700, color: "var(--primary)" }}>
+                  {timeLeftStr}
+                </div>
+                <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "8px" }}>
+                  Action restricted until the lock expires.
+                </p>
               </div>
+            ) : (
+              <form onSubmit={handleSubmit}>
+                <div style={{ marginBottom: "20px" }}>
+                  <input
+                    type="password"
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    placeholder="Enter your password"
+                    autoFocus
+                    style={{
+                      width: "100%",
+                      padding: "12px 16px",
+                      borderRadius: "8px",
+                      border: "1px solid var(--border)",
+                      background: "var(--bg-main)",
+                      color: "var(--text-main)",
+                      fontFamily: "inherit",
+                      fontSize: "14px"
+                    }}
+                    required
+                  />
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px" }}>
+                    {error ? (
+                      <p style={{ color: "var(--danger)", fontSize: "12px", fontWeight: 600, margin: 0 }}>
+                        <i className="fas fa-exclamation-circle"></i> {error}
+                      </p>
+                    ) : <div></div>}
+                    <a 
+                      href="/dashboard?view=view-password&trigger-reset=true" 
+                      style={{ fontSize: "12px", color: "var(--primary)", fontWeight: 600, textDecoration: "none" }}
+                    >
+                      Forgot Password?
+                    </a>
+                  </div>
+                </div>
 
-              <div style={{ display: "flex", gap: "12px" }}>
-                <button 
-                  type="button" 
-                  className="btn btn-outline" 
-                  onClick={handleCancel}
-                  style={{ flex: 1, justifyContent: "center" }}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className="btn btn-primary"
-                  style={{ flex: 1, justifyContent: "center", background: "var(--primary)", color: "white" }}
-                >
-                  Confirm
-                </button>
-              </div>
-            </form>
+                <div style={{ display: "flex", gap: "12px" }}>
+                  <button 
+                    type="button" 
+                    className="btn btn-outline" 
+                    onClick={handleCancel}
+                    style={{ flex: 1, justifyContent: "center" }}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary"
+                    style={{ flex: 1, justifyContent: "center", background: "var(--primary)", color: "white" }}
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
