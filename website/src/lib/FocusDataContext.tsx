@@ -63,6 +63,7 @@ export function FocusDataProvider({ children }: { children: React.ReactNode }) {
     schedule: DEFAULTS.schedule,
     settings: {},
     duration: 60,
+    passwordProtection: DEFAULTS.passwordProtection,
   });
   const [loading, setLoading] = useState(true);
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
