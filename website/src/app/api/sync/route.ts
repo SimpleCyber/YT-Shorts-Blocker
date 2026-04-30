@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { doc, setDoc, getDoc } from "firebase/firestore";
-import { db } from "../../../lib/firebase";
+import { adminDb } from "../../../lib/firebaseAdmin";
 
 export async function GET(request: Request) {
   try {
@@ -11,12 +10,12 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Missing uid" }, { status: 400 });
     }
 
-    const userDoc = await getDoc(doc(db, "users", uid));
-    if (!userDoc.exists() || !userDoc.data().config) {
+    const userDoc = await adminDb.collection("users").doc(uid).get();
+    if (!userDoc.exists || !userDoc.data()?.config) {
       return NextResponse.json({ config: null });
     }
 
-    return NextResponse.json({ config: userDoc.data().config });
+    return NextResponse.json({ config: userDoc.data()?.config });
   } catch (err: any) {
     console.error("API Sync GET Error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
@@ -32,7 +31,7 @@ export async function POST(request: Request) {
     }
 
     // Update Firestore
-    await setDoc(doc(db, "users", uid), {
+    await adminDb.collection("users").doc(uid).set({
       config: { ...config, lastSynced: Date.now() }
     }, { merge: true });
 
