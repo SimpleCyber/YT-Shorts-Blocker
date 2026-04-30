@@ -311,10 +311,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // Init App
             initBlockSites();
             updateTimerDisplay();
             updateInsightsDisplay();
+
+            // Request fresh data from Firestore via background script
+            // This ensures the popup always has the latest data
+            chrome.runtime.sendMessage({ action: "REFRESH_FROM_CLOUD" }, (response) => {
+                if (chrome.runtime.lastError) {
+                    console.warn("Cloud refresh failed:", chrome.runtime.lastError.message);
+                    return;
+                }
+                // Data will arrive via chrome.storage.onChanged, which triggers re-render
+                console.log("Cloud refresh result:", response);
+            });
 
             const btnEditList = document.getElementById('btn-edit-list');
             if (btnEditList) {
@@ -351,6 +361,10 @@ document.addEventListener('DOMContentLoaded', () => {
             chrome.storage.onChanged.addListener((changes) => {
                 if (changes.focusSession || changes.authUser) {
                     updateTimerDisplay();
+                }
+                // Re-render block sites UI when blockedSites or authUser changes
+                if (changes.blockedSites || changes.authUser) {
+                    initBlockSites();
                 }
             });
         } else {

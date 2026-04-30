@@ -1,6 +1,27 @@
 import { NextResponse } from "next/server";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { db } from "../../../lib/firebase";
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const uid = searchParams.get("uid");
+
+    if (!uid) {
+      return NextResponse.json({ error: "Missing uid" }, { status: 400 });
+    }
+
+    const userDoc = await getDoc(doc(db, "users", uid));
+    if (!userDoc.exists() || !userDoc.data().config) {
+      return NextResponse.json({ config: null });
+    }
+
+    return NextResponse.json({ config: userDoc.data().config });
+  } catch (err: any) {
+    console.error("API Sync GET Error:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
 
 export async function POST(request: Request) {
   try {

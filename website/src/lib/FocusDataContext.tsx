@@ -41,7 +41,7 @@ export function useFocusData() {
 }
 
 const STORAGE_KEY = "focus_shield_local_data";
-const SYNC_INTERVAL = 10000; // 10 seconds debounce for auto-sync
+const FIRESTORE_SYNC_INTERVAL = 2000; // 2 seconds debounce for Firestore writes
 
 export function FocusDataProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -85,6 +85,12 @@ export function FocusDataProvider({ children }: { children: React.ReactNode }) {
           const mergedData = { ...DEFAULTS, ...remoteData };
           if (JSON.stringify(prev) !== JSON.stringify(mergedData)) {
             localStorage.setItem(`${STORAGE_KEY}_${user.uid}`, JSON.stringify(mergedData));
+            
+            // Push Firestore changes to Extension immediately
+            if (isExtensionAvailable()) {
+              setExtensionData(mergedData).catch(() => {});
+            }
+            
             return mergedData;
           }
           return prev;
@@ -109,24 +115,29 @@ export function FocusDataProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("message", handleExtensionMessage);
   }, [user]);
 
-  const syncToRemote = useCallback(async (currentData: FocusData) => {
+  // Sync to Firestore only (debounced)
+  const syncToFirestore = useCallback(async (currentData: FocusData) => {
     if (!user) return;
     try {
-      // Sync to Firestore
       await setDoc(doc(db, "users", user.uid), { 
         config: { ...currentData, lastSynced: Date.now() } 
       }, { merge: true });
-      
-      // Sync to Extension
-      if (isExtensionAvailable()) {
-        await setExtensionData(currentData);
-      }
-      
-      console.log("Data synced successfully");
+      console.log("Firestore sync complete");
     } catch (e) {
-      console.error("Sync failed", e);
+      console.error("Firestore sync failed", e);
     }
   }, [user]);
+
+  // Sync to Extension immediately (no debounce)
+  const syncToExtension = useCallback(async (currentData: FocusData) => {
+    if (!isExtensionAvailable()) return;
+    try {
+      await setExtensionData(currentData);
+      console.log("Extension sync complete");
+    } catch (e) {
+      // Extension not available — silent fail
+    }
+  }, []);
 
   const updateData = useCallback((newData: Partial<FocusData>) => {
     if (!user) return;
@@ -137,19 +148,23 @@ export function FocusDataProvider({ children }: { children: React.ReactNode }) {
       // Save to Local Storage immediately
       localStorage.setItem(`${STORAGE_KEY}_${user.uid}`, JSON.stringify(updated));
 
-      // Debounce Sync to Remote
+      // Sync to Extension IMMEDIATELY
+      syncToExtension(updated);
+
+      // Debounce Firestore sync (2s)
       if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
       syncTimeoutRef.current = setTimeout(() => {
-        syncToRemote(updated);
-      }, SYNC_INTERVAL);
+        syncToFirestore(updated);
+      }, FIRESTORE_SYNC_INTERVAL);
 
       return updated;
     });
-  }, [user, syncToRemote]);
+  }, [user, syncToFirestore, syncToExtension]);
 
   const syncNow = async () => {
     if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
-    await syncToRemote(data);
+    await syncToFirestore(data);
+    await syncToExtension(data);
   };
 
   return (

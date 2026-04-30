@@ -31,6 +31,13 @@ const handleMessage = function(request, sender, sendResponse) {
             sendResponse({ success: true });
         });
         return true;
+    } else if (request.action === "REFRESH_FROM_CLOUD") {
+        refreshFromCloud().then((result) => {
+            sendResponse(result);
+        }).catch(() => {
+            sendResponse({ success: false });
+        });
+        return true;
     } else if (request.action === "START_FOCUS") {
         startFocusMode(request.duration);
         sendResponse({ success: true });
@@ -144,8 +151,11 @@ chrome.idle.onStateChanged.addListener((newState) => {
 
 // Periodic save every 10 seconds
 chrome.alarms.create("saveTimeAlarm", { periodInMinutes: 0.2 });
+// Periodic cloud sync every 30 seconds to keep extension data fresh
+chrome.alarms.create("cloudSyncAlarm", { periodInMinutes: 0.5 });
 chrome.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === "saveTimeAlarm") recordTime();
+    if (alarm.name === "cloudSyncAlarm") refreshFromCloud();
 });
 
 // Broadcast changes to Website Dashboard
@@ -189,6 +199,39 @@ chrome.storage.onChanged.addListener((changes, area) => {
         });
     }
 });
+
+// Fetch latest config from Firestore via the website's sync API
+async function refreshFromCloud() {
+    try {
+        const data = await chrome.storage.local.get(['authUser']);
+        const uid = data.authUser?.uid;
+        if (!uid) return { success: false, reason: 'no_user' };
+
+        const response = await fetch(`http://localhost:3000/api/sync?uid=${encodeURIComponent(uid)}`);
+        if (!response.ok) return { success: false, reason: 'api_error' };
+
+        const result = await response.json();
+        if (!result.config) return { success: false, reason: 'no_config' };
+
+        const config = result.config;
+        const syncKeys = ['blockedSites', 'blockedCategories', 'blockedKeywords', 'usageLimits', 'isBlockingEnabled', 'isWhitelistMode', 'focusWhitelist', 'focusSession', 'settings', 'schedule'];
+        
+        const toStore = {};
+        syncKeys.forEach(key => {
+            if (config[key] !== undefined) toStore[key] = config[key];
+        });
+
+        if (Object.keys(toStore).length > 0) {
+            await chrome.storage.local.set(toStore);
+            console.log('Cloud Sync: Updated local storage from Firestore', Object.keys(toStore));
+        }
+
+        return { success: true };
+    } catch (err) {
+        console.error('Cloud Sync: Refresh failed', err);
+        return { success: false, reason: err.message };
+    }
+}
 
 // Focus Mode Logic
 let focusInterval = null;
