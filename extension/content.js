@@ -681,14 +681,13 @@ function createSandglassTimer(blockData = {}) {
         </div>
 
         <div class="settings-section">
-          <label class="section-label">Block Duration</label>
+          <label class="section-label">Block Relaxation Timer</label>
           <div class="duration-grid">
+            <div class="duration-option" data-value="30">30 Sec</div>
             <div class="duration-option" data-value="60">1 Min</div>
             <div class="duration-option" data-value="120">2 Min</div>
             <div class="duration-option" data-value="300">5 Min</div>
-            <div class="duration-option" data-value="3600">1 Hour</div>
-            <div class="duration-option" data-value="7200">2 Hours</div>
-            <div class="duration-option" data-value="14400">4 Hours</div>
+            <div class="duration-option" data-value="0">Hard Block</div>
           </div>
         </div>
 
@@ -868,32 +867,40 @@ function createSandglassTimer(blockData = {}) {
   let timeLeft = 60;
   let timerInterval;
 
-  const isHardBlock = ['site', 'usage_limit', 'keyword', 'whitelist', 'focus_only_site', 'focus_mode'].includes(blockData.reason);
-
   // Start the particle hourglass animation for ALL blocks (visual only)
   const hgAnimation = window.startHourglass ? window.startHourglass(container) : null;
 
-  if (isHardBlock) {
-    // Hide timer for hard blocks
-    timerVal.style.display = 'none';
-    timerLabel.textContent = blockData.reason === 'usage_limit' ? 'Daily Limit Reached' : 'Access Restricted';
-    timerLabel.style.fontSize = '18px';
-    timerLabel.style.fontWeight = '700';
-    timerLabel.style.color = '#fff';
-    
-    // Show Go Back button
-    goBackBtn.style.display = 'flex';
-    goBackBtn.onclick = () => {
-      if (window.history.length > 1) {
-        window.history.back();
-      } else {
-        window.close();
-      }
-    };
-  } else {
-    getSettings().then(s => {
-      timeLeft = s.duration;
+  getSettings().then(s => {
+    const duration = s.duration !== undefined ? s.duration : 60;
+    const isHardBlock = duration === 0;
+
+    if (isHardBlock) {
+      // Hide timer for hard blocks
+      timerVal.style.display = 'none';
+      timerLabel.textContent = blockData.reason === 'usage_limit' ? 'Daily Limit Reached' : 'Access Restricted';
+      timerLabel.style.fontSize = '18px';
+      timerLabel.style.fontWeight = '700';
+      timerLabel.style.color = '#fff';
+      
+      // Show Go Back button
+      goBackBtn.style.display = 'flex';
+      goBackBtn.onclick = () => {
+        if (window.history.length > 1) {
+          window.history.back();
+        } else {
+          window.close();
+        }
+      };
+    } else {
+      // Show countdown
+      timeLeft = duration;
       timerVal.textContent = timeLeft;
+      timerVal.style.display = 'block';
+      timerLabel.textContent = 'seconds left';
+      timerLabel.style.fontSize = '14px';
+      timerLabel.style.fontWeight = '400';
+      timerLabel.style.color = 'var(--text-dim)';
+      goBackBtn.style.display = 'none';
 
       timerInterval = setInterval(() => {
         timeLeft--;
@@ -918,8 +925,8 @@ function createSandglassTimer(blockData = {}) {
           }, 1000);
         }
       }, 1000);
-    });
-  }
+    }
+  });
 
   // Fetch Quote
   async function updateQuote() {
@@ -1140,6 +1147,13 @@ new MutationObserver(() => {
 
 // Periodic check every 30 seconds (to catch usage limit expiry mid-session)
 setInterval(manageViewing, 30000);
+
+// Listen for storage changes to apply updates in real-time (e.g. unblocking from dashboard)
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local') {
+    manageViewing();
+  }
+});
 
 // Initial check
 manageViewing();

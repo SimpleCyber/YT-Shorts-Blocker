@@ -211,7 +211,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local') return;
 
     // Relevant keys for the dashboard
-    const syncKeys = ['blockedSites', 'blockedCategories', 'blockedKeywords', 'usageLimits', 'isBlockingEnabled', 'isWhitelistMode', 'focusWhitelist', 'focusSession', 'settings', 'ext_blockSites', 'ext_focusMode', 'ext_insights'];
+    const syncKeys = ['blockedSites', 'blockedCategories', 'blockedKeywords', 'usageLimits', 'isBlockingEnabled', 'isWhitelistMode', 'focusWhitelist', 'focusSession', 'settings', 'duration', 'ext_blockSites', 'ext_focusMode', 'ext_insights'];
     const hasSyncChange = Object.keys(changes).some(key => syncKeys.includes(key));
 
     if (hasSyncChange) {
@@ -262,7 +262,7 @@ async function refreshFromCloud() {
         if (!result.config) return { success: false, reason: 'no_config' };
 
         const config = result.config;
-        const syncKeys = ['blockedSites', 'blockedCategories', 'blockedKeywords', 'usageLimits', 'isBlockingEnabled', 'isWhitelistMode', 'focusWhitelist', 'focusSession', 'settings', 'schedule'];
+        const syncKeys = ['blockedSites', 'blockedCategories', 'blockedKeywords', 'usageLimits', 'isBlockingEnabled', 'isWhitelistMode', 'focusWhitelist', 'focusSession', 'settings', 'schedule', 'duration'];
         
         const toStore = {};
         syncKeys.forEach(key => {

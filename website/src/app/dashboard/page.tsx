@@ -114,12 +114,28 @@ export default function DashboardPage() {
     const modeParam = url.searchParams.get('mode');
     const triggerReset = url.searchParams.get('trigger-reset');
 
+    const savedView = localStorage.getItem("dashboard_active_view");
+
     if (viewParam) {
       setActiveView(viewParam);
     } else if (modeParam === 'reset-focus-password' || triggerReset === 'true') {
       setActiveView('view-password');
+    } else if (savedView) {
+      setActiveView(savedView);
     }
   }, []);
+
+  // Persist active view to localStorage and URL
+  useEffect(() => {
+    if (activeView) {
+      localStorage.setItem("dashboard_active_view", activeView);
+      const url = new URL(window.location.href);
+      if (url.searchParams.get('view') !== activeView) {
+        url.searchParams.set('view', activeView);
+        window.history.replaceState({}, '', url.toString());
+      }
+    }
+  }, [activeView]);
 
   const handleBlockingToggle = (enabled: boolean) => {
     updateData({ isBlockingEnabled: enabled });

@@ -182,6 +182,7 @@ export const DEFAULTS = {
     passwordHash: "",
     lockUntil: null as number | null,
   },
+  duration: 60,
 };
 
 export const ADULT_KEYWORDS = [

@@ -2,10 +2,12 @@
 
 import React, { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
+import { useFocusData } from "../../lib/FocusDataContext";
 import { checkIncognitoStatus, openExtensionSettings } from "../../lib/extensionBridge";
 
 export default function Settings() {
   const { theme, setTheme } = useTheme();
+  const { data, updateData } = useFocusData();
   const [mounted, setMounted] = useState(false);
   const [isIncognitoAllowed, setIsIncognitoAllowed] = useState(false);
   const [showIncognitoModal, setShowIncognitoModal] = useState(false);
@@ -25,16 +27,39 @@ export default function Settings() {
 
   const handleIncognitoClick = () => {
     if (isIncognitoAllowed) {
-      // Already enabled, maybe show a "You're all set" message
+      // Already enabled
     } else {
       setShowIncognitoModal(true);
     }
   };
 
+  const isAdultFilterEnabled = data.blockedCategories?.includes('adult');
+  const toggleAdultFilter = () => {
+    const currentCats = data.blockedCategories || [];
+    if (isAdultFilterEnabled) {
+      updateData({ blockedCategories: currentCats.filter(c => c !== 'adult') });
+    } else {
+      updateData({ blockedCategories: [...currentCats, 'adult'] });
+    }
+  };
+
+  const relaxationOptions = [
+    { label: "None (Hard Block)", value: 0 },
+    { label: "30 Seconds", value: 30 },
+    { label: "1 Minute", value: 60 },
+    { label: "2 Minutes", value: 120 },
+    { label: "5 Minutes", value: 300 },
+  ];
+
+  if (!mounted) return null;
+
   return (
     <section id="view-settings" className="view-section active">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-        <h1 className="page-title" style={{ margin: 0 }}>Settings</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
+        <div>
+          <h1 className="page-title" style={{ margin: 0 }}>Settings</h1>
+          <p style={{ color: "var(--text-muted)", fontSize: "14px", marginTop: "4px" }}>Configure your FocusShield preferences and extension behavior.</p>
+        </div>
         <button 
           className={`btn ${isIncognitoAllowed ? "btn-success" : "btn-outline"}`} 
           style={{ 
@@ -53,86 +78,149 @@ export default function Settings() {
         </button>
       </div>
 
-      <div className="settings-section">
-        <h3 className="settings-title">General</h3>
-        <div className="setting-item">
-          <div className="setting-info">
-            <div className="setting-name">Enable FocusShield shortcut option using right-click</div>
-            <div className="setting-desc">Add sites to your block list or your focus mode list by right-clicking and selecting the FocusShield menu on a website.</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "24px" }}>
+        
+        {/* Global Controls */}
+        <div className="settings-section card" style={{ padding: "24px", margin: 0 }}>
+          <h3 className="settings-title" style={{ marginTop: 0, marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
+            <i className="fas fa-globe" style={{ color: "var(--primary)" }}></i> Global Controls
+          </h3>
+          
+          <div className="setting-item" style={{ marginBottom: "20px", borderBottom: "1px solid var(--border)", paddingBottom: "20px" }}>
+            <div className="setting-info">
+              <div className="setting-name">Blocking Mode</div>
+              <div className="setting-desc">Master switch for the blocking engine across all sites.</div>
+            </div>
+            <label className="switch">
+              <input 
+                type="checkbox" 
+                checked={data.isBlockingEnabled} 
+                onChange={(e) => updateData({ isBlockingEnabled: e.target.checked })}
+              />
+              <span className="slider"></span>
+            </label>
           </div>
-          <label className="switch"><input type="checkbox" defaultChecked /><span className="slider"></span></label>
-        </div>
-      </div>
 
-      <div className="settings-section">
-        <h3 className="settings-title">Your Privacy Choices <i className="fas fa-check-circle" style={{ color: "var(--primary)" }}></i></h3>
-        <p style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "16px", lineHeight: 1.5 }}>
-          We and our affiliates use the information collected to analyze and improve performance, enable certain features and functionality, understand more about users and their interaction with our product and for market intelligence purposes.
-        </p>
-        <div className="setting-item">
-          <div className="setting-info">
-            <div className="setting-name">Opt Out from Sharing of Browsing Data</div>
-            <div className="setting-desc">You can stop the sharing of your browsing data by turning off the automated collection of your browsing data.</div>
+          <div className="setting-item">
+            <div className="setting-info">
+              <div className="setting-name">Adult Content Filter</div>
+              <div className="setting-desc">Automatically block adult websites and related keywords.</div>
+            </div>
+            <label className="switch">
+              <input 
+                type="checkbox" 
+                checked={isAdultFilterEnabled} 
+                onChange={toggleAdultFilter}
+              />
+              <span className="slider"></span>
+            </label>
           </div>
-          <label className="switch"><input type="checkbox" /><span className="slider"></span></label>
         </div>
-      </div>
 
-      <div className="settings-section">
-        <h3 className="settings-title">Appearance</h3>
-        <div className="setting-item">
-          <div className="setting-info">
-            <div className="setting-name">Theme</div>
-            <div className="setting-desc">Select your preferred color theme for the dashboard.</div>
-          </div>
-          <div style={{ display: "flex", gap: "8px" }}>
-            {mounted ? (
-              <select 
-                value={theme}
-                onChange={(e) => setTheme(e.target.value)}
-                style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--bg-main)", color: "var(--text-main)", outline: "none", cursor: "pointer", fontSize: "14px", fontWeight: 600 }}
-              >
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-                <option value="system">System</option>
-              </select>
-            ) : (
-              <div style={{ width: "90px", height: "36px", borderRadius: "8px", background: "var(--bg-hover)" }}></div>
-            )}
+        {/* Extension Behavior */}
+        <div className="settings-section card" style={{ padding: "24px", margin: 0 }}>
+          <h3 className="settings-title" style={{ marginTop: 0, marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
+            <i className="fas fa-puzzle-piece" style={{ color: "var(--primary)" }}></i> Extension Behavior
+          </h3>
+          
+          <div className="setting-item">
+            <div className="setting-info">
+              <div className="setting-name">Blocker Relaxation Timer</div>
+              <div className="setting-desc">How long to wait on the block screen before access is allowed.</div>
+            </div>
+            <select 
+              value={data.duration ?? 60}
+              onChange={(e) => updateData({ duration: parseInt(e.target.value) })}
+              style={{ 
+                padding: "8px 12px", 
+                borderRadius: "8px", 
+                border: "1px solid var(--border)", 
+                background: "var(--bg-main)", 
+                color: "var(--text-main)", 
+                outline: "none", 
+                cursor: "pointer", 
+                fontSize: "14px", 
+                fontWeight: 600 
+              }}
+            >
+              {relaxationOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
           </div>
         </div>
-      </div>
 
-      <div className="settings-section">
-        <h3 className="settings-title">View</h3>
-        <div className="setting-item">
-          <div className="setting-info">
-            <div className="setting-name">Show blocked page motivational images</div>
-            <div className="setting-desc">Enabling this will show images on a blocked site. Disabling will show a white background.</div>
+        {/* Appearance */}
+        <div className="settings-section card" style={{ padding: "24px", margin: 0 }}>
+          <h3 className="settings-title" style={{ marginTop: 0, marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
+            <i className="fas fa-palette" style={{ color: "var(--primary)" }}></i> Appearance
+          </h3>
+          
+          <div className="setting-item">
+            <div className="setting-info">
+              <div className="setting-name">Dashboard Theme</div>
+              <div className="setting-desc">Customize the look and feel of your FocusShield dashboard.</div>
+            </div>
+            <select 
+              value={theme}
+              onChange={(e) => setTheme(e.target.value)}
+              style={{ 
+                padding: "8px 12px", 
+                borderRadius: "8px", 
+                border: "1px solid var(--border)", 
+                background: "var(--bg-main)", 
+                color: "var(--text-main)", 
+                outline: "none", 
+                cursor: "pointer", 
+                fontSize: "14px", 
+                fontWeight: 600 
+              }}
+            >
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+              <option value="system">System</option>
+            </select>
           </div>
-          <label className="switch"><input type="checkbox" defaultChecked /><span className="slider"></span></label>
         </div>
-        <div className="setting-item">
-          <div className="setting-info">
-            <div className="setting-name">Show remaining time on favicon</div>
-            <div className="setting-desc">Enable this to show the time left in current interval on the extension&apos;s favicon.</div>
-          </div>
-          <label className="switch"><input type="checkbox" defaultChecked /><span className="slider"></span></label>
-        </div>
-      </div>
 
-      <div className="settings-section">
-        <h3 className="settings-title">Integrations</h3>
-        <div className="setting-item">
-          <div className="setting-info" style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-            <i className="fab fa-slack" style={{ fontSize: "24px" }}></i>
-            <div>
-              <div className="setting-name">Slack</div>
-              <div className="setting-desc">Upgrade to FocusShield Unlimited to empower your focus with automations for Slack.</div>
+        {/* Security & Sync */}
+        <div className="settings-section card" style={{ padding: "24px", margin: 0 }}>
+          <h3 className="settings-title" style={{ marginTop: 0, marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
+            <i className="fas fa-shield-alt" style={{ color: "var(--primary)" }}></i> Security & Sync
+          </h3>
+          
+          <div className="setting-item" style={{ marginBottom: "20px", borderBottom: "1px solid var(--border)", paddingBottom: "20px" }}>
+            <div className="setting-info">
+              <div className="setting-name">Password Protection</div>
+              <div className="setting-desc">Status of your dashboard and settings access lock.</div>
+            </div>
+            <div style={{ 
+              fontSize: "13px", 
+              fontWeight: 700, 
+              color: data.passwordProtection?.enabled ? "var(--success)" : "var(--text-muted)",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px"
+            }}>
+              {data.passwordProtection?.enabled ? (
+                <><i className="fas fa-lock"></i> Active</>
+              ) : (
+                <><i className="fas fa-lock-open"></i> Not Configured</>
+              )}
             </div>
           </div>
-          <button className="btn-premium premium-element" style={{ width: "auto" }}>Go Unlimited</button>
+
+          <div className="setting-item">
+            <div className="setting-info">
+              <div className="setting-name">Cloud Synchronization</div>
+              <div className="setting-desc">Your settings are automatically synced across devices.</div>
+            </div>
+            <div style={{ fontSize: "12px", color: "var(--success)", fontWeight: 600 }}>
+              <i className="fas fa-cloud-check"></i> Fully Synced
+            </div>
+          </div>
         </div>
+
       </div>
 
       {/* Incognito Instruction Modal */}

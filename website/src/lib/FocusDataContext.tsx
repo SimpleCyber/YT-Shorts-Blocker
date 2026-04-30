@@ -26,6 +26,7 @@ export interface FocusData {
     lockUntil?: number | null;
   };
   settings: Record<string, any>;
+  duration: number;
   lastSynced?: number;
   [key: string]: any;
 }
@@ -61,6 +62,7 @@ export function FocusDataProvider({ children }: { children: React.ReactNode }) {
     focusSession: DEFAULTS.focusSession,
     schedule: DEFAULTS.schedule,
     settings: {},
+    duration: 60,
   });
   const [loading, setLoading] = useState(true);
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -148,6 +150,13 @@ export function FocusDataProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     setDataState((prev) => {
+      // Deep check for changes to avoid infinite sync loops
+      const hasChanged = Object.entries(newData).some(([key, value]) => {
+        return JSON.stringify(prev[key as keyof FocusData]) !== JSON.stringify(value);
+      });
+
+      if (!hasChanged) return prev;
+
       const updated = { ...prev, ...newData };
       
       // Save to Local Storage immediately
