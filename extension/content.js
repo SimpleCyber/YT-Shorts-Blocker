@@ -652,7 +652,7 @@ function createSandglassTimer(blockData = {}) {
         <div class="tip-content" id="focus-tip">${blockData.reason === 'focus_mode' ? 'This site is not in your Focus Whitelist. Stay focused on your goals!' : blockData.reason === 'focus_only_site' ? 'This site is only accessible during Focus Mode. Start a focus session to access it.' : 'Did you know? It takes average 23 minutes to regain full focus after a single distraction.'}</div>
       </div>
       <div class="privacy-link-wrap">
-        <a href="${chrome.runtime.getURL('privacy.html')}" target="_blank" class="privacy-link">Privacy Policy</a>
+        <a href="https://focusshield.vercel.app/#privacy" target="_blank" class="privacy-link">Privacy Policy</a>
       </div>
     </div>
     <div class="timer-panel">
