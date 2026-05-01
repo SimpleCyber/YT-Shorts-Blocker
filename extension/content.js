@@ -1062,7 +1062,7 @@ async function isBlockedUrl() {
     return { blocked: true, reason: 'focus_only_site' };
   }
 
-  if (settings.isBlockingEnabled === false) return false;
+  if (settings.isBlockingEnabled === false) return { blocked: false };
   
   // 3. Schedule Logic
   if (settings.schedule && settings.schedule.enabled) {
@@ -1070,7 +1070,6 @@ async function isBlockedUrl() {
     const now = new Date();
     const today = DAYS[now.getDay()];
     
-    // Default to 'not active' if day doesn't match or no intervals
     let isActiveNow = false;
 
     if (settings.schedule.days.includes(today) && settings.schedule.intervals && settings.schedule.intervals.length > 0) {
@@ -1100,9 +1099,10 @@ async function isBlockedUrl() {
     }
 
     if (isActiveNow) {
-      return false; // Browse freely during scheduled intervals
+      console.log("FocusShield: Inside Free Hours interval. Browsing allowed.");
+      return { blocked: false };
     }
-    // Otherwise (outside intervals or non-scheduled days), continue to blocking logic below
+    console.log("FocusShield: Outside Free Hours. Block list active.");
   }
   
   let allBlockedSites = [...(settings.blockedSites || [])];
@@ -1156,7 +1156,7 @@ async function isBlockedUrl() {
   }
 
   const validKeywords = keywords.filter(kw => kw.trim().length > 0);
-  if (validKeywords.length > 0) {
+  if (!isBlocked && validKeywords.length > 0) {
     const normalizedUrl = url.toLowerCase();
     // Check keywords in URL
     isBlocked = validKeywords.some(kw => {
