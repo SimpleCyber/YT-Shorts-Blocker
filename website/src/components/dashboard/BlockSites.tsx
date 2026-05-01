@@ -60,8 +60,8 @@ export default function BlockSites({ isAdminUnlocked, showUpgrade, onOpenModal }
           <div className="tooltip-container">
             <i className="fas fa-question-circle tooltip-icon" style={{ fontSize: "16px" }}></i>
             <div className="tooltip-content schedule-tooltip">
-              <b>Automate your blocking!</b>
-              Select days and time intervals for your block list to be active. Outside of these hours, you can browse freely.<br /><br />
+              <b>What is the schedule about?</b>
+              This schedule defines your "Free Hours". Select days and time intervals when you want to browse freely. Outside of these hours, your block list will be strictly enforced.<br /><br />
               <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Free: 1 interval • Premium: Multiple</span>
             </div>
           </div>

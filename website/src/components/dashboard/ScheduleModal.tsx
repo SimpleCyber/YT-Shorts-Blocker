@@ -50,7 +50,7 @@ export default function ScheduleModal({ isOpen, onClose, isAdminUnlocked, showUp
 
   const addInterval = () => {
     const currentIntervals = localSchedule?.intervals || [];
-    const limit = isAdminUnlocked ? 2 : 1;
+    const limit = isAdminUnlocked ? 99 : 1;
     if (currentIntervals.length >= limit) {
       setShowLimitModal(true);
       return;
@@ -94,7 +94,8 @@ export default function ScheduleModal({ isOpen, onClose, isAdminUnlocked, showUp
     <div className={`modal-overlay ${isOpen ? "active" : ""}`} onClick={onClose}>
       <div className="schedule-modal" onClick={(e) => e.stopPropagation()}>
         <div style={{ textAlign: 'left', padding: '24px 32px' }}>
-          <h2 className="modal-title">Set up blocking schedule</h2>
+          <h2 className="modal-title" style={{ marginBottom: '4px' }}>Free Browsing Schedule</h2>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>Define hours to browse freely. Blocking is active outside these times.</p>
           <button className="close-x" onClick={onClose}>&times;</button>
         </div>
 
@@ -152,7 +153,7 @@ export default function ScheduleModal({ isOpen, onClose, isAdminUnlocked, showUp
             <div className="upgrade-banner-small">
               <div className="upgrade-info">
                 <span className="interval-count">
-                  {(localSchedule?.intervals || []).length}/1 Free Interval - Upgrade for 2 intervals
+                  {(localSchedule?.intervals || []).length}/1 Free Interval - Upgrade for Unlimited
                 </span>
               </div>
               <button className="btn-upgrade-mini">Upgrade</button>
@@ -172,7 +173,7 @@ export default function ScheduleModal({ isOpen, onClose, isAdminUnlocked, showUp
             <div className="upgrade-banner-small" style={{ background: 'rgba(16, 185, 129, 0.1)', borderColor: 'var(--success)' }}>
               <div className="upgrade-info">
                 <span className="interval-count" style={{ color: 'var(--success)' }}>
-                  {(localSchedule?.intervals || []).length}/2 Intervals
+                  {(localSchedule?.intervals || []).length} Intervals (Unlimited Plan)
                 </span>
               </div>
               <i className="fas fa-check-circle" style={{ color: '#10b981' }}></i>

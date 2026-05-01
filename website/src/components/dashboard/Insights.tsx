@@ -170,7 +170,7 @@ export default function Insights({ isAdminUnlocked }: InsightsProps) {
       <div className="insights-top-stats">
         <div className="stat-card"><div className="stat-label">Average Focus Time</div><div className="stat-value">{avgTime}</div></div>
         <div className="stat-card"><div className="stat-label">Top Focus Day</div><div className="stat-value">{topDay}</div></div>
-        <div className="stat-card"><div className="stat-label">Most Blocked Category</div><div className="stat-value">{topCategory}</div></div>
+        <div className="stat-card"><div className="stat-label">Overall Usage Time</div><div className="stat-value">{formatTime(totalTimeSecs)}</div></div>
       </div>
 
       <div className="insights-charts">

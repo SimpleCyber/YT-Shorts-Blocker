@@ -13,7 +13,10 @@ const DEFAULTS = {
     header: '',
     subtitle: '',
     version: 0
-  }
+  },
+  focusSession: { active: false, paused: false, endTime: 0, startTime: 0 },
+  focusWhitelist: [],
+  schedule: { enabled: false, intervals: [], days: [] }
 };
 
 const CATEGORY_LISTS = {
@@ -1067,13 +1070,11 @@ async function isBlockedUrl() {
     const now = new Date();
     const today = DAYS[now.getDay()];
     
-    if (!settings.schedule.days.includes(today)) {
-      return false; // Not blocked today
-    }
-    
-    if (settings.schedule.intervals && settings.schedule.intervals.length > 0) {
+    // Default to 'not active' if day doesn't match or no intervals
+    let isActiveNow = false;
+
+    if (settings.schedule.days.includes(today) && settings.schedule.intervals && settings.schedule.intervals.length > 0) {
       const currentMins = now.getHours() * 60 + now.getMinutes();
-      let isActiveNow = false;
       
       for (const interval of settings.schedule.intervals) {
         if (!interval.start || !interval.end) continue;
@@ -1096,11 +1097,12 @@ async function isBlockedUrl() {
           }
         }
       }
-      
-      if (!isActiveNow) {
-        return false; // Not blocked right now
-      }
     }
+
+    if (isActiveNow) {
+      return false; // Browse freely during scheduled intervals
+    }
+    // Otherwise (outside intervals or non-scheduled days), continue to blocking logic below
   }
   
   let allBlockedSites = [...(settings.blockedSites || [])];
