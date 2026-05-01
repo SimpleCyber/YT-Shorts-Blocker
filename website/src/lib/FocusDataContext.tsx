@@ -117,7 +117,7 @@ export function FocusDataProvider({ children }: { children: React.ReactNode }) {
     const handleExtensionMessage = (event: MessageEvent) => {
       if (event.data?.type === "FOCUS_SHIELD_EXT_UPDATE" && event.data.payload) {
         const extData = event.data.payload as Partial<FocusData>;
-        updateData(extData);
+        updateData(extData, true);
       }
     };
 
@@ -149,7 +149,7 @@ export function FocusDataProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const updateData = useCallback((newData: Partial<FocusData>) => {
+  const updateData = useCallback((newData: Partial<FocusData>, fromExtension = false) => {
     if (!user) return;
 
     setDataState((prev) => {
@@ -165,8 +165,10 @@ export function FocusDataProvider({ children }: { children: React.ReactNode }) {
       // Save to Local Storage immediately
       localStorage.setItem(`${STORAGE_KEY}_${user.uid}`, JSON.stringify(updated));
 
-      // Sync to Extension IMMEDIATELY
-      syncToExtension(updated);
+      // Sync to Extension IMMEDIATELY only if the change didn't originate from the extension
+      if (!fromExtension) {
+        syncToExtension(updated);
+      }
 
       // Debounce Firestore sync (2s)
       if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);

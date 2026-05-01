@@ -207,6 +207,8 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 // Broadcast changes to Website Dashboard
+let cloudSyncTimeout = null;
+
 chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local') return;
 
@@ -236,13 +238,16 @@ chrome.storage.onChanged.addListener((changes, area) => {
                 const config = {};
                 syncKeys.forEach(k => { if (data[k] !== undefined) config[k] = data[k]; });
                 
-                fetch('http://localhost:3000/api/sync', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ uid, config })
-                }).then(r => r.json())
-                  .then(res => console.log('Cloud Sync Success:', res))
-                  .catch(err => console.error('Cloud Sync Failed:', err));
+                if (cloudSyncTimeout) clearTimeout(cloudSyncTimeout);
+                cloudSyncTimeout = setTimeout(() => {
+                    fetch('http://localhost:3000/api/sync', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ uid, config })
+                    }).then(r => r.json())
+                      .then(res => console.log('Cloud Sync Success:', res))
+                      .catch(err => console.error('Cloud Sync Failed:', err));
+                }, 2000);
             }
         });
     }
