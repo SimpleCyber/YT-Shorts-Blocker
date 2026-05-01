@@ -1061,6 +1061,48 @@ async function isBlockedUrl() {
 
   if (settings.isBlockingEnabled === false) return false;
   
+  // 3. Schedule Logic
+  if (settings.schedule && settings.schedule.enabled) {
+    const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const now = new Date();
+    const today = DAYS[now.getDay()];
+    
+    if (!settings.schedule.days.includes(today)) {
+      return false; // Not blocked today
+    }
+    
+    if (settings.schedule.intervals && settings.schedule.intervals.length > 0) {
+      const currentMins = now.getHours() * 60 + now.getMinutes();
+      let isActiveNow = false;
+      
+      for (const interval of settings.schedule.intervals) {
+        if (!interval.start || !interval.end) continue;
+        
+        const [startH, startM] = interval.start.split(':').map(Number);
+        const [endH, endM] = interval.end.split(':').map(Number);
+        const startMins = startH * 60 + startM;
+        const endMins = endH * 60 + endM;
+        
+        if (startMins <= endMins) {
+          if (currentMins >= startMins && currentMins <= endMins) {
+            isActiveNow = true;
+            break;
+          }
+        } else {
+          // Overnight interval
+          if (currentMins >= startMins || currentMins <= endMins) {
+            isActiveNow = true;
+            break;
+          }
+        }
+      }
+      
+      if (!isActiveNow) {
+        return false; // Not blocked right now
+      }
+    }
+  }
+  
   let allBlockedSites = [...(settings.blockedSites || [])];
   const activeCats = settings.blockedCategories || [];
   activeCats.forEach(catId => {

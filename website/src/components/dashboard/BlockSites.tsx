@@ -56,10 +56,47 @@ export default function BlockSites({ isAdminUnlocked, showUpgrade, onOpenModal }
           <h1 className="page-title">Block List</h1>
           <p className="page-desc">Block sites permanently or by schedule</p>
         </div>
-        <button className="btn btn-outline" onClick={() => setIsScheduleModalOpen(true)}>
-          <i className="far fa-clock"></i> Schedule
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div className="tooltip-container">
+            <i className="fas fa-question-circle tooltip-icon" style={{ fontSize: "16px" }}></i>
+            <div className="tooltip-content schedule-tooltip">
+              <b>Automate your blocking!</b>
+              Select days and time intervals for your block list to be active. Outside of these hours, you can browse freely.<br /><br />
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Free: 1 interval • Premium: Multiple</span>
+            </div>
+          </div>
+          <button className="btn btn-outline" onClick={() => setIsScheduleModalOpen(true)}>
+            <i className="far fa-clock"></i> Schedule
+          </button>
+        </div>
       </div>
+
+      <style jsx>{`
+        .schedule-tooltip {
+          top: 100% !important;
+          bottom: auto !important;
+          right: 0 !important;
+          left: auto !important;
+          transform: translateY(10px) !important;
+          background: #1e293b !important;
+          border: 1px solid var(--border) !important;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
+          padding: 16px !important;
+          width: 280px !important;
+        }
+        .schedule-tooltip::after {
+          top: auto !important;
+          bottom: 100% !important;
+          left: auto !important;
+          right: 20px !important;
+          border-color: transparent transparent #1e293b transparent !important;
+        }
+        .tooltip-container:hover .schedule-tooltip {
+          visibility: visible !important;
+          opacity: 1 !important;
+          transform: translateY(10px) !important;
+        }
+      `}</style>
 
       <div style={{ display: "flex", marginBottom: "24px" }}>
         <button
