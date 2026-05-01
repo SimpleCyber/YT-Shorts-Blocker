@@ -153,6 +153,14 @@ export function openExtensionSettings(): void {
   }, "*");
 }
 
+export interface CustomBlockPage {
+  mode: 'default' | 'custom';
+  imageUrl: string;
+  header: string;
+  subtitle: string;
+  version: number;
+}
+
 // Default values matching options.js
 export const DEFAULTS = {
   blockedSites: ["youtube.com/shorts", "instagram.com/reels"],
@@ -182,6 +190,13 @@ export const DEFAULTS = {
     passwordHash: "",
     lockUntil: null as number | null,
   },
+  customBlockPage: {
+    mode: 'default' as 'default' | 'custom',
+    imageUrl: '',
+    header: '',
+    subtitle: '',
+    version: 0,
+  } as CustomBlockPage,
   duration: 60,
 };
 

@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { doc, getDoc, setDoc, onSnapshot, DocumentSnapshot } from "firebase/firestore";
 import { db } from "./firebase";
 import { useAuth } from "./AuthContext";
-import { DEFAULTS, isExtensionAvailable, setData as setExtensionData, getData as getExtensionData, FocusSession } from "./extensionBridge";
+import { DEFAULTS, isExtensionAvailable, setData as setExtensionData, getData as getExtensionData, FocusSession, CustomBlockPage } from "./extensionBridge";
 
 export interface FocusData {
   blockedSites: string[];
@@ -25,6 +25,7 @@ export interface FocusData {
     passwordHash: string;
     lockUntil?: number | null;
   };
+  customBlockPage: CustomBlockPage;
   settings: Record<string, any>;
   duration: number;
   lastSynced?: number;
@@ -64,6 +65,7 @@ export function FocusDataProvider({ children }: { children: React.ReactNode }) {
     settings: {},
     duration: 60,
     passwordProtection: DEFAULTS.passwordProtection,
+    customBlockPage: DEFAULTS.customBlockPage,
   });
   const [loading, setLoading] = useState(true);
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);

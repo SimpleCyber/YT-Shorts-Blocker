@@ -6,7 +6,14 @@ const DEFAULTS = {
   lockUntil: 0, // timestamp
   isBlockingEnabled: true,
   isWhitelistMode: false,
-  usageLimits: []
+  usageLimits: [],
+  customBlockPage: {
+    mode: 'default',
+    imageUrl: '',
+    header: '',
+    subtitle: '',
+    version: 0
+  }
 };
 
 const CATEGORY_LISTS = {
@@ -97,7 +104,7 @@ function showCustomModal({ title, message, confirmText = "Confirm", cancelText =
 }
 
 // Function to create and inject the sandglass timer
-function createSandglassTimer(blockData = {}) {
+function createSandglassTimer(blockData = {}, settings = {}) {
   // Add Google Fonts
   if (!document.getElementById("outfit-font")) {
     const fontLink = document.createElement("link");
@@ -241,6 +248,51 @@ function createSandglassTimer(blockData = {}) {
     .privacy-link:hover {
       opacity: 1;
       color: var(--primary);
+    }
+
+    /* Custom mode left panel styles */
+    .info-panel.custom-mode {
+      padding: 0;
+      position: relative;
+      background-size: cover;
+      background-position: center;
+    }
+    
+    .info-panel.custom-mode::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.2) 100%);
+      z-index: 1;
+    }
+    
+    .info-panel.custom-mode .custom-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100%;
+      padding: 8% 6%;
+    }
+
+    .cbp-custom-header {
+      font-size: clamp(24px, 4vw, 48px);
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.4);
+      line-height: 1.2;
+      margin-bottom: 15px;
+      word-break: break-word;
+    }
+
+    .cbp-custom-subtitle {
+      font-size: clamp(14px, 2vw, 20px);
+      color: rgba(255,255,255,0.9);
+      text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+      line-height: 1.5;
+      font-weight: 400;
+      word-break: break-word;
     }
 
     .hourglass-container {
@@ -640,7 +692,17 @@ function createSandglassTimer(blockData = {}) {
   const container = document.createElement("div");
   container.className = "blocker-container";
 
-  container.innerHTML = `
+  const cbp = settings.customBlockPage || {};
+  const isCustomMode = cbp.mode === 'custom' && cbp.imageUrl;
+
+  const infoPanelHTML = isCustomMode ? `
+    <div class="info-panel custom-mode" style="background-image: url('${cbp.imageUrl}')">
+      <div class="custom-content">
+        ${cbp.header ? `<div class="cbp-custom-header">${cbp.header}</div>` : ''}
+        ${cbp.subtitle ? `<div class="cbp-custom-subtitle">${cbp.subtitle}</div>` : ''}
+      </div>
+    </div>
+  ` : `
     <div class="info-panel">
       <div class="app-title">FocusShield</div>
       <div class="quote-wrap">
@@ -655,6 +717,10 @@ function createSandglassTimer(blockData = {}) {
         <a href="https://focusshield.vercel.app/#privacy" target="_blank" class="privacy-link">Privacy Policy</a>
       </div>
     </div>
+  `;
+
+  container.innerHTML = `
+    ${infoPanelHTML}
     <div class="timer-panel">
      <!-- <button class="theme-toggle" id="settings-trigger">
         <i class="fas fa-cog"></i>
@@ -728,17 +794,23 @@ function createSandglassTimer(blockData = {}) {
 
   document.body.appendChild(container);
 
-  // Focus tips database
-  const tips = [
-    "It takes an average of 23 minutes to regain full focus after a distraction.",
-    "Deep work sessions of 90 minutes are more effective than 8 hours of distracted work.",
-    "The 5-second rule: If you have an impulse to act on a goal, you must physically move within 5 seconds.",
-    "Multitasking is a myth; your brain is just switching between tasks rapidly, losing efficiency.",
-    "A clean workspace leads to a clean mind and better focus.",
-  ];
+  // Focus tips database (only if not custom mode)
+  if (!isCustomMode) {
+    const tips = [
+      "It takes an average of 23 minutes to regain full focus after a distraction.",
+      "Deep work sessions of 90 minutes are more effective than 8 hours of distracted work.",
+      "The 5-second rule: If you have an impulse to act on a goal, you must physically move within 5 seconds.",
+      "Multitasking is a myth; your brain is just switching between tasks rapidly, losing efficiency.",
+      "A clean workspace leads to a clean mind and better focus.",
+    ];
 
-  const focusTipEl = container.querySelector("#focus-tip");
-  focusTipEl.textContent = tips[Math.floor(Math.random() * tips.length)];
+    const focusTipEl = container.querySelector("#focus-tip");
+    if (focusTipEl) {
+      focusTipEl.textContent = tips[Math.floor(Math.random() * tips.length)];
+    }
+    
+    updateQuote();
+  }
 
   // Settings UI Logic
   const settingsPanel = container.querySelector("#settings-panel");
@@ -935,13 +1007,16 @@ function createSandglassTimer(blockData = {}) {
         "https://api.quotable.io/random?tags=wisdom|inspirational",
       );
       const data = await response.json();
-      document.getElementById("quote-text").textContent = `"${data.content}"`;
-      document.getElementById("quote-author").textContent = data.author;
+      const qt = document.getElementById("quote-text");
+      const qa = document.getElementById("quote-author");
+      if (qt && qa) {
+        qt.textContent = `"${data.content}"`;
+        qa.textContent = data.author;
+      }
     } catch (e) {
       console.log("Using fallback quote");
     }
   }
-  updateQuote();
 
   // Return API
   return {
@@ -1111,17 +1186,73 @@ async function recordBlockedAttempt(reason, category) {
   await chrome.storage.local.set({ [statsKey]: stats });
 }
 
+// Helper to update the block page UI in real-time
+function updateBlockPageUI(container, settings) {
+  const cbp = settings.customBlockPage || {};
+  const isCustomMode = cbp.mode === 'custom' && cbp.imageUrl;
+  const infoPanel = container.querySelector('.info-panel');
+  
+  if (!infoPanel) return;
+
+  if (isCustomMode) {
+    infoPanel.className = "info-panel custom-mode";
+    infoPanel.style.backgroundImage = `url('${cbp.imageUrl}')`;
+    infoPanel.innerHTML = `
+      <div class="custom-content">
+        ${cbp.header ? `<div class="cbp-custom-header">${cbp.header}</div>` : ''}
+        ${cbp.subtitle ? `<div class="cbp-custom-subtitle">${cbp.subtitle}</div>` : ''}
+      </div>
+    `;
+  } else {
+    // Only rebuild if it currently has custom mode to prevent resetting tips/quotes
+    if (!infoPanel.classList.contains('custom-mode')) return;
+
+    infoPanel.className = "info-panel";
+    infoPanel.style.backgroundImage = "none";
+    infoPanel.innerHTML = `
+      <div class="app-title">FocusShield</div>
+      <div class="quote-wrap">
+        <div class="quote-text" id="quote-text">"Distraction is the thief of time."</div>
+        <div class="quote-author" id="quote-author">Marcus Aurelius</div>
+      </div>
+      <div class="tips-container">
+        <div class="tip-heading">💡 FOCUS TIP</div>
+        <div class="tip-content" id="focus-tip"></div>
+      </div>
+      <div class="privacy-link-wrap">
+        <a href="https://focusshield.vercel.app/#privacy" target="_blank" class="privacy-link">Privacy Policy</a>
+      </div>
+    `;
+
+    const tips = [
+      "It takes an average of 23 minutes to regain full focus after a distraction.",
+      "Deep work sessions of 90 minutes are more effective than 8 hours of distracted work.",
+      "The 5-second rule: If you have an impulse to act on a goal, you must physically move within 5 seconds.",
+      "Multitasking is a myth; your brain is just switching between tasks rapidly, losing efficiency.",
+      "A clean workspace leads to a clean mind and better focus.",
+    ];
+    const focusTipEl = infoPanel.querySelector("#focus-tip");
+    if (focusTipEl) {
+      focusTipEl.textContent = tips[Math.floor(Math.random() * tips.length)];
+    }
+  }
+}
+
 // Main function to manage viewing and apply timer
 async function manageViewing() {
   const result = await isBlockedUrl();
   const existingBlocker = document.querySelector(".blocker-container");
+  const settings = await getSettings();
 
   if (result.blocked) {
     if (!existingBlocker) {
       // Pause all videos immediately
       document.querySelectorAll("video").forEach(v => v.pause());
-      createSandglassTimer(result);
+      createSandglassTimer(result, settings);
       recordBlockedAttempt(result.reason, result.category);
+    } else {
+      // Update existing UI in real-time
+      updateBlockPageUI(existingBlocker, settings);
     }
   } else if (existingBlocker) {
     existingBlocker.remove();

@@ -14,6 +14,7 @@ import DashboardPrivacy from "../../components/dashboard/DashboardPrivacy";
 import AddBlockModal from "../../components/dashboard/AddBlockModal";
 import ThemeToggle from "../../components/dashboard/ThemeToggle";
 import PasswordProtection from "../../components/dashboard/PasswordProtection";
+import CustomBlockPage from "../../components/dashboard/CustomBlockPage";
 import { doc, getDoc, onSnapshot, DocumentSnapshot } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { FocusData, useFocusData } from "../../lib/FocusDataContext";
@@ -178,21 +179,7 @@ export default function DashboardPage() {
       case "view-password":
         return <PasswordProtection isAdminUnlocked={isUnlimited} />;
       case "view-custom-page":
-        return (
-          <section className="view-section active">
-            <h1 className="page-title">Custom Block Page</h1>
-            <p className="page-desc">Personalize your block screen with your own message or image.</p>
-            <div className="card" style={{ textAlign: "center", padding: "60px 20px" }}>
-              <i className="fas fa-paint-brush" style={{ fontSize: "48px", color: "var(--primary)", marginBottom: "20px" }}></i>
-              <h3>{isUnlimited ? "Feature Unlocked" : "Premium Feature"}</h3>
-              <p style={{ color: "var(--text-muted)", marginTop: "12px" }}>
-                {isUnlimited 
-                  ? "This feature is active. Functionality will be expanded in future updates." 
-                  : "This feature is locked. Please upgrade to Unlimited plan to customize your block page."}
-              </p>
-            </div>
-          </section>
-        );
+        return <CustomBlockPage isAdminUnlocked={isUnlimited} />;
       default:
         return null;
     }
