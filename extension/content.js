@@ -713,8 +713,8 @@ function createSandglassTimer(blockData = {}, settings = {}) {
         <div class="quote-author" id="quote-author">${blockData.reason === 'focus_mode' ? 'Anonymous' : 'Marcus Aurelius'}</div>
       </div>
       <div class="tips-container">
-        <div class="tip-heading">${blockData.reason === 'focus_mode' ? '🎯 FOCUS MODE ACTIVE' : blockData.reason === 'focus_only_site' ? '🚫 FOCUS ONLY SITE' : '💡 FOCUS TIP'}</div>
-        <div class="tip-content" id="focus-tip">${blockData.reason === 'focus_mode' ? 'This site is not in your Focus Whitelist. Stay focused on your goals!' : blockData.reason === 'focus_only_site' ? 'This site is only accessible during Focus Mode. Start a focus session to access it.' : 'Did you know? It takes average 23 minutes to regain full focus after a single distraction.'}</div>
+        <div class="tip-heading">${blockData.reason === 'focus_mode' ? '🎯 FOCUS MODE ACTIVE' : '💡 FOCUS TIP'}</div>
+        <div class="tip-content" id="focus-tip">${blockData.reason === 'focus_mode' ? 'This site is not in your Focus Whitelist. Stay focused on your goals!' : 'Did you know? It takes average 23 minutes to regain full focus after a single distraction.'}</div>
       </div>
       <div class="privacy-link-wrap">
         <a href="https://focusshield.vercel.app/#privacy" target="_blank" class="privacy-link">Privacy Policy</a>
@@ -1053,13 +1053,6 @@ async function isBlockedUrl() {
       return { blocked: true, reason: 'focus_mode' };
     }
     return { blocked: false };
-  }
-
-  // 2. Disabled outside Focus Mode logic (for focusWhitelist items)
-  const focusWhitelist = settings.focusWhitelist || [];
-  if (focusWhitelist.some(site => url.includes(site.toLowerCase()))) {
-    // If it's a focus-only site and we are NOT focusing, block it.
-    return { blocked: true, reason: 'focus_only_site' };
   }
 
   if (settings.isBlockingEnabled === false) return { blocked: false };

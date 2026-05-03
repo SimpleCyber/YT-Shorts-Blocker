@@ -106,28 +106,64 @@ export function setData(data: Record<string, unknown>): Promise<{ success: boole
 /**
  * Start a focus session.
  */
-export function startFocus(duration: number): void {
-  console.log("FocusShield: Starting focus session", duration);
-  window.postMessage({ 
-    type: "FOCUS_SHIELD_SYNC", 
-    payload: { action: "START_FOCUS", duration } 
-  }, "*");
+export function startFocus(duration: number): Promise<void> {
+  return new Promise((resolve) => {
+    const actionType = "START_FOCUS_" + Date.now() + Math.random();
+    const listener = (event: MessageEvent) => {
+      if (event.source !== window) return;
+      if (event.data?.type === "FOCUS_SHIELD_SYNC_RESPONSE" && event.data.actionType === actionType) {
+        window.removeEventListener("message", listener);
+        resolve();
+      }
+    };
+    window.addEventListener("message", listener);
+    window.postMessage({ type: "FOCUS_SHIELD_SYNC", actionType, payload: { action: "START_FOCUS", duration } }, "*");
+    setTimeout(() => { window.removeEventListener("message", listener); resolve(); }, 3000);
+  });
 }
 
-export function pauseFocus(): void {
-  console.log("FocusShield: Toggling pause/resume");
-  window.postMessage({ 
-    type: "FOCUS_SHIELD_SYNC", 
-    payload: { action: "PAUSE_FOCUS" } 
-  }, "*");
+export function pauseFocus(): Promise<void> {
+  return new Promise((resolve) => {
+    const actionType = "PAUSE_FOCUS_" + Date.now() + Math.random();
+    const listener = (event: MessageEvent) => {
+      if (event.source !== window) return;
+      if (event.data?.type === "FOCUS_SHIELD_SYNC_RESPONSE" && event.data.actionType === actionType) {
+        window.removeEventListener("message", listener);
+        resolve();
+      }
+    };
+    window.addEventListener("message", listener);
+    window.postMessage({ type: "FOCUS_SHIELD_SYNC", actionType, payload: { action: "PAUSE_FOCUS" } }, "*");
+    setTimeout(() => { window.removeEventListener("message", listener); resolve(); }, 3000);
+  });
 }
 
-export function resetFocus(): void {
-  console.log("FocusShield: Resetting focus session");
-  window.postMessage({ 
-    type: "FOCUS_SHIELD_SYNC", 
-    payload: { action: "RESET_FOCUS" } 
-  }, "*");
+export function resetFocus(): Promise<void> {
+  return new Promise((resolve) => {
+    const actionType = "RESET_FOCUS_" + Date.now() + Math.random();
+    const listener = (event: MessageEvent) => {
+      if (event.source !== window) return;
+      if (event.data?.type === "FOCUS_SHIELD_SYNC_RESPONSE" && event.data.actionType === actionType) {
+        window.removeEventListener("message", listener);
+        resolve();
+      }
+    };
+    window.addEventListener("message", listener);
+    window.postMessage({ type: "FOCUS_SHIELD_SYNC", actionType, payload: { action: "RESET_FOCUS" } }, "*");
+    setTimeout(() => { window.removeEventListener("message", listener); resolve(); }, 3000);
+  });
+}
+
+/**
+ * Read the current focusSession from the extension for real-time sync.
+ */
+export async function getFocusSession(): Promise<FocusSession | null> {
+  try {
+    const data = await getData(["focusSession"]);
+    return (data.focusSession as FocusSession) || null;
+  } catch {
+    return null;
+  }
 }
 
 export function checkIncognitoStatus(): Promise<boolean> {
@@ -225,12 +261,28 @@ export const SUGGESTED_SITES = [
   { name: "reddit.com", icon: "reddit.com" },
   { name: "tiktok.com", icon: "tiktok.com" },
   { name: "amazon.com", icon: "amazon.com" },
-  { name: "buzzfeed.com", icon: "buzzfeed.com" },
+  { name: "snapchat.com", icon: "snapchat.com" },
   { name: "pinterest.com", icon: "pinterest.com" },
   { name: "twitch.tv", icon: "twitch.tv" },
   { name: "discord.com", icon: "discord.com" },
+  { name: "linkedin.com", icon: "linkedin.com" },
+  { name: "whatsapp.com", icon: "whatsapp.com" },
+  { name: "telegram.org", icon: "telegram.org" },
+  { name: "spotify.com", icon: "spotify.com" },
   { name: "hulu.com", icon: "hulu.com" },
+  { name: "disneyplus.com", icon: "disneyplus.com" },
   { name: "hbomax.com", icon: "hbomax.com" },
+  { name: "primevideo.com", icon: "primevideo.com" },
+  { name: "tumblr.com", icon: "tumblr.com" },
+  { name: "9gag.com", icon: "9gag.com" },
+  { name: "imgur.com", icon: "imgur.com" },
+  { name: "quora.com", icon: "quora.com" },
+  { name: "medium.com", icon: "medium.com" },
+  { name: "buzzfeed.com", icon: "buzzfeed.com" },
+  { name: "dailymotion.com", icon: "dailymotion.com" },
+  { name: "twitch.tv", icon: "twitch.tv" },
+  { name: "roblox.com", icon: "roblox.com" },
+  { name: "store.steampowered.com", icon: "store.steampowered.com" },
 ];
 
 export const FREE_LIMIT = 3;

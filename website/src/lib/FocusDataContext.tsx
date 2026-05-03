@@ -35,7 +35,7 @@ export interface FocusData {
 interface FocusDataContextType {
   data: FocusData;
   loading: boolean;
-  updateData: (newData: Partial<FocusData>) => void;
+  updateData: (newData: Partial<FocusData>, fromExtension?: boolean) => void;
   syncNow: () => Promise<void>;
 }
 
@@ -93,6 +93,10 @@ export function FocusDataProvider({ children }: { children: React.ReactNode }) {
         
         setDataState(prev => {
           const mergedData = { ...DEFAULTS, ...remoteData };
+          // Don't overwrite an active local focus session with stale Firestore data
+          if (prev.focusSession?.active && remoteData.focusSession) {
+            mergedData.focusSession = prev.focusSession;
+          }
           if (JSON.stringify(prev) !== JSON.stringify(mergedData)) {
             localStorage.setItem(`${STORAGE_KEY}_${user.uid}`, JSON.stringify(mergedData));
             

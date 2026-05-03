@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useFocusData } from "../../lib/FocusDataContext";
-import { isExtensionAvailable, startFocus, pauseFocus, resetFocus } from "../../lib/extensionBridge";
+import { isExtensionAvailable, startFocus, pauseFocus, resetFocus, getFocusSession } from "../../lib/extensionBridge";
 
 const TIMER_FULL_DASH = 251.2;
 
@@ -12,26 +12,82 @@ export default function FocusMode() {
   const [siteError, setSiteError] = useState("");
 
   const session = data.focusSession;
+
+  // Local ticker: compute timeLeft from endTime for real-time display
+  const [localTimeLeft, setLocalTimeLeft] = useState(session.timeLeft);
+
+  useEffect(() => {
+    if (session.active && !session.paused && session.endTime) {
+      const tick = () => {
+        const remaining = Math.max(0, Math.round((session.endTime! - Date.now()) / 1000));
+        setLocalTimeLeft(remaining);
+      };
+      tick(); // immediate first tick
+      const interval = setInterval(tick, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setLocalTimeLeft(session.timeLeft);
+    }
+  }, [session.active, session.paused, session.endTime, session.timeLeft]);
+
+  // Periodic sync: poll extension every 5s when session is active to stay in sync
+  const updateDataRef = useRef(updateData);
+  updateDataRef.current = updateData;
+
+  useEffect(() => {
+    if (!session.active) return;
+    const poll = setInterval(async () => {
+      const extSession = await getFocusSession();
+      if (extSession) {
+        updateDataRef.current({ focusSession: extSession }, true);
+      }
+    }, 5000);
+    return () => clearInterval(poll);
+  }, [session.active]);
+
   const isRunning = session.active && !session.paused;
 
-  const mins = Math.floor(session.timeLeft / 60);
-  const secs = session.timeLeft % 60;
-  const progress = session.timeLeft / session.duration;
+  const mins = Math.floor(localTimeLeft / 60);
+  const secs = localTimeLeft % 60;
+  const progress = session.duration > 0 ? localTimeLeft / session.duration : 1;
   const dashoffset = TIMER_FULL_DASH - progress * TIMER_FULL_DASH;
 
-  const handleToggle = () => {
+  const handleToggle = async () => {
     if (!isExtensionAvailable()) return;
     
     if (!session.active) {
-      startFocus(session.duration);
+      const now = Date.now();
+      // Optimistic local update — show running state immediately
+      updateData({
+        focusSession: {
+          active: true,
+          paused: false,
+          startTime: now,
+          endTime: now + session.duration * 1000,
+          duration: session.duration,
+          timeLeft: session.duration,
+          type: 'focus',
+        },
+      });
+      await startFocus(session.duration);
     } else {
-      pauseFocus();
+      await pauseFocus();
+      // After pause, poll the latest state from extension
+      const extSession = await getFocusSession();
+      if (extSession) {
+        updateData({ focusSession: extSession }, true);
+      }
     }
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (!isExtensionAvailable()) return;
-    resetFocus();
+    await resetFocus();
+    // Poll latest state after reset
+    const extSession = await getFocusSession();
+    if (extSession) {
+      updateData({ focusSession: extSession }, true);
+    }
   };
 
   const handleAddWhitelist = () => {
@@ -104,7 +160,7 @@ export default function FocusMode() {
             <div className="info-tooltip-wrapper">
               <i className="fas fa-question-circle info-icon"></i>
               <div className="focus-tooltip-content">
-                These sites will ONLY be accessible during Focus Mode and will otherwise be disabled.
+                These sites will ONLY be accessible during Focus Mode. All other sites will be blocked while focusing.
               </div>
             </div>
           </div>

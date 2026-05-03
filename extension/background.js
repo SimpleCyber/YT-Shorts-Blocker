@@ -319,8 +319,19 @@ async function refreshFromCloud() {
 
     const toStore = {};
     syncKeys.forEach((key) => {
-      if (config[key] !== undefined) toStore[key] = config[key];
+      if (config[key] !== undefined) {
+        // Don't overwrite focusSession here — handle it separately below
+        if (key === 'focusSession') return;
+        toStore[key] = config[key];
+      }
     });
+
+    // Only sync focusSession from cloud if NO local session is actively running
+    const localData = await chrome.storage.local.get(['focusSession']);
+    const localSession = localData.focusSession;
+    if (config.focusSession !== undefined && (!localSession || !localSession.active)) {
+      toStore.focusSession = config.focusSession;
+    }
 
     if (Object.keys(toStore).length > 0) {
       await chrome.storage.local.set(toStore);

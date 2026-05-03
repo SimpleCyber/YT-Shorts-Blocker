@@ -47,6 +47,9 @@ navItems.forEach((item) => {
     item.classList.add("active");
     const targetId = item.getAttribute("data-target");
     document.getElementById(targetId).classList.add("active");
+
+    // Persist active tab across popup open/close
+    chrome.storage.local.set({ popupActiveTab: targetId });
   });
 });
 
@@ -316,12 +319,25 @@ function updateInsightsDisplay() {
 // Initialize Popup
 document.addEventListener("DOMContentLoaded", () => {
   // Check Auth State First
-  chrome.storage.local.get(["authUser"], (result) => {
+  chrome.storage.local.get(["authUser", "popupActiveTab"], (result) => {
     if (result.authUser) {
       // User is logged in — show main app
       if (loginGate) loginGate.style.display = "none";
       if (mainContent) mainContent.style.display = "block";
       if (bottomNav) bottomNav.style.display = "flex";
+
+      // Restore persisted active tab
+      const savedTab = result.popupActiveTab;
+      if (savedTab) {
+        const targetNav = document.querySelector(`[data-target="${savedTab}"]`);
+        const targetContent = document.getElementById(savedTab);
+        if (targetNav && targetContent) {
+          navItems.forEach((n) => n.classList.remove("active"));
+          tabContents.forEach((t) => t.classList.remove("active"));
+          targetNav.classList.add("active");
+          targetContent.classList.add("active");
+        }
+      }
 
       // Update user avatar
       if (avatarImg) {
